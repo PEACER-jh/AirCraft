@@ -1,8 +1,15 @@
 #ifndef BASIC_HPP
 #define BASIC_HPP
 
+#include <vector>
+#include <iostream>
+
 namespace basic
 {
+// int Counter = 0;
+const int RubikCubeNum = 15;
+const int BilliardsNum = 6;
+
 enum class ObjectType
 {
     RUBIKCUBE,

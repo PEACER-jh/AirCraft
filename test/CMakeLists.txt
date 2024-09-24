@@ -14,7 +14,7 @@ include_directories(
     ./include)
 
 set(SOURCES
- 
+    ./src/classify.cpp
 )
 
 add_executable(main main.cpp ${SOURCES})
