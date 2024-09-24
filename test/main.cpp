@@ -1,6 +1,11 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 
+#include "include/basic.hpp"
+
+#define PICKMODE 0
+
+
 int main()
 {
     cv::Mat frame;
