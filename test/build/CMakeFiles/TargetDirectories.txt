@@ -1,0 +1,3 @@
+/home/peacer/AirCraft/test/build/CMakeFiles/rebuild_cache.dir
+/home/peacer/AirCraft/test/build/CMakeFiles/edit_cache.dir
+/home/peacer/AirCraft/test/build/CMakeFiles/main.dir
