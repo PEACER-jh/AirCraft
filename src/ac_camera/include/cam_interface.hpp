@@ -3,7 +3,7 @@
 
 #include <string>
 #include <opencv2/opencv.hpp>
-#include <sensor_msgs/msg/image.hpp>
+#include <Eigen/Core>
 
 namespace ac_camera
 {
@@ -42,9 +42,9 @@ public:
   bool isInit();
   bool isRun();
 
-  bool set_parameter(CamParamsEnum type, int value);
-  bool get_parameter(CamParamsEnum type, int & value);
-  std::string info_error();
+  // bool set_parameter(CamParamsEnum type, int value);
+  // bool get_parameter(CamParamsEnum type, int & value);
+  // std::string info_error();
 
 private:
   bool is_open_;
@@ -53,6 +53,8 @@ private:
   cv::VideoCapture capture_;
   std::string error_message_;
   std::unordered_map<ac_camera::CamParamsEnum, int> cam_params_;
+
+  // Eigen::Mac
 
 };
 
