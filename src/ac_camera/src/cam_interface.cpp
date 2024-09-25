@@ -39,6 +39,7 @@ bool CamInterface::SensorOpen()
 bool CamInterface::SensorInit() 
 {
     this->is_init_ = true;
+    return true;
 }
 
 bool CamInterface::SensorRun(cv::Mat & image)
