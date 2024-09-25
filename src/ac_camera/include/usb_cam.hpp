@@ -29,7 +29,7 @@ private:
     std::shared_ptr<camera_info_manager::CameraInfoManager> cam_info_manager_;
 
     CamInterface camera_;
-    sensor_msgs::msg::Image image_;
+    sensor_msgs::msg::Image::SharedPtr image_;
     sensor_msgs::msg::CameraInfo cam_info_;
     std::thread capture_thread_;
 

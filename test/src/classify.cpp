@@ -57,15 +57,4 @@ void ClassifyModeChoose(cv::Mat& img, const int type)
     cv::imshow("CLASSIFY", img);
 }
 
-
-
-
-
-
-
-
-
-
-
-
 }
