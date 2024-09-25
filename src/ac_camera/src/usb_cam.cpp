@@ -9,6 +9,15 @@ UsbCamNode::UsbCamNode(const rclcpp::NodeOptions & options) : rclcpp::Node("usb_
     this->camera_.SensorOpen();
     this->camera_.SensorInit();
     this->image_pub_ = this->create_publisher<sensor_msgs::msg::Image>("/image/raw", 10);
+    this->cam_info_pub_ = this->create_publisher<sensor_msgs::msg::CameraInfo>("/camera/info", 10);
+    this->cam_info_manager_ = std::make_shared<camera_info_manager::CameraInfoManager>(this, "UsbCam");
+    auto pkg_path = ament_index_cpp::get_package_share_directory("ac_bringup");
+    auto yaml_path = "file://" + pkg_path + "/config/usb_cam_info.yaml";
+    if (!cam_info_manager_->loadCameraInfo(yaml_path))
+        RCLCPP_WARN(this->get_logger(), "Load Camera Info Fail!");
+    else
+        cam_info_ = cam_info_manager_->getCameraInfo();
+        
     this->capture_thread_ = std::thread{[this]() -> void{
         while(rclcpp::ok())
         {
@@ -20,6 +29,8 @@ UsbCamNode::UsbCamNode(const rclcpp::NodeOptions & options) : rclcpp::Node("usb_
                 bridge.header.frame_id = "camera";
                 bridge.encoding = "bgr8";
                 bridge.image = image;   
+
+                this->cam_info_pub_->publish(cam_info_);
                 this->image_pub_->publish(*bridge.toImageMsg());
             }
         }

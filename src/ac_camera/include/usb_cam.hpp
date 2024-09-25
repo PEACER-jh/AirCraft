@@ -8,9 +8,10 @@
 #include "cv_bridge/cv_bridge.h"
 #include "sensor_msgs/msg/image.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
-#include "camera_info_manager/camera_info_manager.hpp"
 #include "image_transport/publisher.hpp"
 #include "image_transport/image_transport.hpp"
+#include "camera_info_manager/camera_info_manager.hpp"
+#include <ament_index_cpp/get_package_share_directory.hpp>
 
 #include "cam_interface.hpp"
 
@@ -24,7 +25,8 @@ public:
 
 private:
     rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
-    std::unique_ptr<camera_info_manager::CameraInfoManager> cam_info_manager;
+    rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_pub_;
+    std::shared_ptr<camera_info_manager::CameraInfoManager> cam_info_manager_;
 
     CamInterface camera_;
     sensor_msgs::msg::Image image_;
