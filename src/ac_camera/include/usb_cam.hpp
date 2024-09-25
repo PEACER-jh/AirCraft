@@ -24,7 +24,7 @@ public:
     ~UsbCamNode();
 
 private:
-    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_pub_;
+    image_transport::CameraPublisher image_pub_;
     rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_pub_;
     std::shared_ptr<camera_info_manager::CameraInfoManager> cam_info_manager_;
 
