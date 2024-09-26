@@ -47,6 +47,7 @@ bool CamInterface::SensorRun(cv::Mat & image)
     if(!this->is_open_) 
         return false;
 
+    image.create(cv::Size(720, 1280), CV_8UC3); // 图像大小
     capture_ >> image;
     return true;
 }
@@ -60,12 +61,5 @@ bool CamInterface::SensorShut()
 bool CamInterface::isOpen() { return this->is_open_; }
 bool CamInterface::isInit() { return this->is_init_; }
 bool CamInterface::isRun() { return this->is_run_; }
-
-
-
-
-
-
-
 
 }

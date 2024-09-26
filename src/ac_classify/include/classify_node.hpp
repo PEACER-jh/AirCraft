@@ -28,19 +28,21 @@ public:
     ClassifyNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
     ~ClassifyNode();
 
+    image_transport::CameraPublisher image_mark_pub_;
+    image_transport::CameraPublisher image_debug_pub_;
     std::shared_ptr<image_transport::Subscriber> image_sub_;
-    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_mark_pub_;
-    rclcpp::Publisher<sensor_msgs::msg::Image>::SharedPtr image_debug_pub_;
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_sub_;
 
     void ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr & img);
     void CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstSharedPtr info);
+    void ImagePub(std_msgs::msg::Header header);
 
 private:
     cv::Mat image_;
+    cv::Mat image_debug_, image_mark_;
     cv::Mat camera_matrix;
     cv::Mat dist_coeffs_;
-    sensor_msgs::msg::Image image_msg_;
+    sensor_msgs::msg::Image::SharedPtr image_msg_;
     sensor_msgs::msg::CameraInfo cam_info_;
 
     std::unordered_map<ObjectType, int> ObjectType_;
