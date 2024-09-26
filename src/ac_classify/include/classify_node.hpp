@@ -10,6 +10,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "cv_bridge/cv_bridge.h"
+#include "std_msgs/msg/int8.hpp"
 #include "sensor_msgs/msg/image.hpp"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "image_transport/publisher.hpp"
@@ -39,15 +40,30 @@ public:
 
 private:
     cv::Mat image_;
-    cv::Mat image_debug_, image_mark_;
+    cv::Mat image_mark_;
+    cv::Mat image_debug_;
     cv::Mat camera_matrix;
     cv::Mat dist_coeffs_;
     sensor_msgs::msg::Image::SharedPtr image_msg_;
     sensor_msgs::msg::CameraInfo cam_info_;
 
+public:
     std::unordered_map<ObjectType, int> ObjectType_;
     std::unordered_map<ObjectColor, int> ObjectColor_;
     std::vector<Object> objects_;
+
+    rclcpp::Subscription<std_msgs::msg::Int8>::SharedPtr object_type_sub_;
+    void ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg);
+
+private:
+    int object_type_;
+
+    int first_canny_low_threshold_;     // 第一级canny边缘检测低阈值
+    int first_canny_high_threshold_;    // 第一级canny边缘检测高阈值
+    int second_canny_low_threshold_;    // 第二级canny边缘检测低阈值
+    int second_canny_high_threshold_;   // 第二级canny边缘检测高阈值
+    int dilate_iterations_;             // 膨胀迭代次数
+    int max_contour_number;             // 最大轮廓数量
 
 };
 

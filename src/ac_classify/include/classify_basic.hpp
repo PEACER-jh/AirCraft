@@ -6,8 +6,10 @@
 
 namespace ac_classify
 {
-const int RubikCubeNum = 15;
-const int BilliardsNum = 6;
+#define RubikCubeSize 0.560;   // m
+#define BilliardsSize 0.525;   // m
+#define RubikCubeNum 15;
+#define BilliardsNum 6;
 
 enum class ObjectType
 {
@@ -35,10 +37,10 @@ struct Object
     Object(ObjectType type, ObjectColor color) : type_(type)
     {
         if(type_ == ObjectType::RUBIKCUBE){
-            size_ = 0.560;  // 魔方边长
+            size_ = RubikCubeSize;
             color_ = ObjectColor::NONE;
         } else if(type_ == ObjectType::BILLIARDS) {
-            size_ = 0.525;  // 台球直径
+            size_ = BilliardsSize;
             color_ = color;
         } else {
             return;
