@@ -45,12 +45,11 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
     /* 第二级边缘检测 */    cv::Canny(edges, edges, second_canny_low_threshold_, second_canny_high_threshold_);
     /* 第二级寻找轮廓 */    cv::findContours(edges, contours2, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
-    // TODO : 轮廓大小排序
-
-    /* test */ this->object_type_ = 1;
+    std::sort(contours2.begin(), contours2.end(), 
+            [](const std::vector<cv::Point> &a, const std::vector<cv::Point> &b){return cv::contourArea(a) > cv::contourArea(b);});
+    /* TODO : test */ this->object_type_ = 1;
     switch(this->object_type_)
     {
-        /* TODO */
         case (int)ObjectType::RUBIKCUBE: {findRubikCube(mark, contours2); break;}
         case (int)ObjectType::BILLIARDS: {findBilliards(mark, contours2); break;}
         default: break;
@@ -60,6 +59,7 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
     this->image_mark_ = mark;
     this->image_debug_ = edges;
     this->ImagePub(header);
+
 }
 
 void ClassifyNode::ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg)
@@ -69,6 +69,7 @@ void ClassifyNode::ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg)
         auto getType = [](int value){
             switch(value)
             {
+                // TODO ： 目标选取策略——在最大的前几个轮廓中选取质心距手眼标定处最近的轮廓
                 case (int)ObjectType::RUBIKCUBE: return "RubikCube";
                 case (int)ObjectType::BILLIARDS: return "Billiards";
                 default:                         return "Unknown";
@@ -127,7 +128,7 @@ void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Poin
                 MAXcontour = approx;
             }
             
-            Object object(ObjectType::RUBIKCUBE, ObjectColor::NONE);
+            Object object(ObjectType::RUBIKCUBE, ObjectColor::NONE, approx);
             this->objects_.push_back(object);
             count++;
         }
@@ -161,7 +162,8 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
                 MAXcontour = contour;
             }
             // TODO : 台球颜色识别 
-            Object object(ObjectType::BILLIARDS, ObjectColor::NONE);
+            auto color = this->recogizeColor(mark, contour);
+            Object object(ObjectType::BILLIARDS, color, contour);
             this->objects_.push_back(object);
             count++;
         } 
@@ -173,6 +175,15 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
     if(!MAXcontour.empty())
         cv::circle(mark, center, size, cv::Scalar(0, 0, 255), 2);
     
+}
+
+ObjectColor ClassifyNode::recogizeColor(cv::Mat& mark, std::vector<cv::Point>& contour)
+{
+    cv::Mat mask = cv::Mat::zeros(mark.size(), CV_8UC1);
+    cv::drawContours(mask, std::vector<cv::Point>{contour}, -1, cv::Scalar(255), cv::FILLED);
+    cv::Mat roi = mark & mask;
+
+
 }
 
 }
