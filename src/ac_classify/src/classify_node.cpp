@@ -45,8 +45,9 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
     /* 第二级边缘检测 */    cv::Canny(edges, edges, second_canny_low_threshold_, second_canny_high_threshold_);
     /* 第二级寻找轮廓 */    cv::findContours(edges, contours2, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
+    // TODO : 轮廓大小排序
 
-    /* test */ this->object_type_ = 0;
+    /* test */ this->object_type_ = 1;
     switch(this->object_type_)
     {
         /* TODO */
@@ -109,6 +110,7 @@ void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Poin
     int count = 0;
     double MAXarea = -1;
     std::vector<cv::Point> MAXcontour;
+    this->objects_.clear();
     
     for(auto & contour : contours)
     {
@@ -140,7 +142,36 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
     int count = 0;
     double MAXarea = -1;
     std::vector<cv::Point> MAXcontour;
+    this->objects_.clear();
+    
+    double perimeter = 0, area = 0, circularity = 0;
+    for(auto & contour : contours)
+    {
+        if(contour.empty()) continue;
+        if(count > this->max_contour_number || count > RubikCubeNum) break;
+    
+        perimeter = cv::arcLength(contour, true);
+        area = cv::contourArea(contour);
+        circularity = (4 * CV_PI * area) / (perimeter * perimeter);
+        if(circularity > 0.8)
+        {
+            if(MAXarea < area)
+            {
+                MAXarea = area;
+                MAXcontour = contour;
+            }
+            // TODO : 台球颜色识别 
+            Object object(ObjectType::BILLIARDS, ObjectColor::NONE);
+            this->objects_.push_back(object);
+            count++;
+        } 
+    }
 
+    cv::Moments m = cv::moments(MAXcontour);
+    cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);
+    int size = static_cast<int>(std::sqrt(MAXarea / CV_PI));
+    if(!MAXcontour.empty())
+        cv::circle(mark, center, size, cv::Scalar(0, 0, 255), 2);
     
 }
 
