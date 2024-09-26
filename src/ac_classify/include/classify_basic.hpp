@@ -6,10 +6,10 @@
 
 namespace ac_classify
 {
-#define RubikCubeSize 0.560;   // m
-#define BilliardsSize 0.525;   // m
-#define RubikCubeNum 15;
-#define BilliardsNum 6;
+#define RubikCubeSize 0.560   // m
+#define BilliardsSize 0.525   // m
+#define RubikCubeNum 15
+#define BilliardsNum 6
 
 enum class ObjectType
 {

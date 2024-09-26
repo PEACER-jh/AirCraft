@@ -54,6 +54,8 @@ public:
 
     rclcpp::Subscription<std_msgs::msg::Int8>::SharedPtr object_type_sub_;
     void ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg);
+    void findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours);   // 寻找魔方
+    void findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours);   // 寻找台球
 
 private:
     int object_type_;
