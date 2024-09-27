@@ -16,6 +16,7 @@
 #include "image_transport/publisher.hpp"
 #include "image_transport/subscriber.hpp"
 #include "image_transport/image_transport.hpp"
+#include "geometry_msgs/msg/point32.hpp"
 #include "geometry_msgs/msg/polygon_stamped.hpp"
 #include "camera_info_manager/camera_info_manager.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
@@ -65,7 +66,7 @@ public:
 private:
     int object_type_;
     std::vector<cv::Point> contour_;
-    geometry_msgs::msg::PolygonStamped contour_msg_;
+    geometry_msgs::msg::PolygonStamped polygons_;
 
     double min_area_;   // 识别的最小面积
     double max_area_;   // 识别的最大面积

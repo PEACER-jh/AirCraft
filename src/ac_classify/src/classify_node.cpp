@@ -41,6 +41,7 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
 {
     cv::Mat gray, blurred, edges, mark;
     std::vector<std::vector<cv::Point>> contours1, contours2;
+    this->image_msg_->header = img->header;
     this->image_ = cv_bridge::toCvShare(img, "bgr8")->image;
     mark = this->image_.clone();
     this->arm_center_ = cv::Point(mark.cols / 2 + offset_u_, mark.rows / 2 + offset_v_);
@@ -117,17 +118,29 @@ void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
 {
     if(contour.empty()) return;
     this->contour_ = contour;
+    this->polygons_.header = this->image_msg_->header;
 
     if(this->object_type_ == (int)ObjectType::RUBIKCUBE)    // 魔方边框处理
     {
-        
+       for(auto point : contour_)
+       {
+            geometry_msgs::msg::Point32 p;
+            p.x = point.x;
+            p.y = point.y;
+            p.z = 0;
+            polygons_.polygon.points.push_back(p);
+       }
     }
-
     if(this->object_type_ == (int)ObjectType::BILLIARDS)    // 台球边框处理
     {
-        
+        cv::Rect rect = cv::boundingRect(contour);
+        int length = std::min(rect.width, rect.height);
+        // polygons_.polygon.points.push_back(geometry_msgs::msg::Point32(rect.x, rect.y));
+        // polygons_.polygon.points.push_back(geometry_msgs::msg::Point32(rect.x + length, rect.y));
+        // polygons_.polygon.points.push_back(geometry_msgs::msg::Point32(rect.x + length, rect.y + length));
+        // polygons_.polygon.points.push_back(geometry_msgs::msg::Point32(rect.x, rect.y + length));
     }
-
+    this->contour_pub_->publish(this->polygons_);
 }
 
 void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours)
