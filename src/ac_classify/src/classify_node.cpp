@@ -6,6 +6,11 @@ ClassifyNode::ClassifyNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
 {
     RCLCPP_INFO(this->get_logger(), "Node [ %s ] is started ", this->get_name());
 
+    this->min_area_ = this->declare_parameter<int>("min_area", 5000);
+    this->max_area_ = this->declare_parameter<int>("max_area", 50000);
+    this->offset_u_ = this->declare_parameter<int>("offset_u", 0);
+    this->offset_v_ = this->declare_parameter<int>("offset_v", 0);
+
     this->first_canny_low_threshold_ = this->declare_parameter<int>("first_canny_low_threthold", 50);
     this->first_canny_high_threshold_ = this->declare_parameter<int>("first_canny_high_threthold", 150);
     this->second_canny_low_threshold_ = this->declare_parameter<int>("second_canny_low_threthold", 50);
@@ -15,6 +20,7 @@ ClassifyNode::ClassifyNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
 
     this->image_mark_pub_ = image_transport::create_camera_publisher(this, "/image_mark", rmw_qos_profile_default);
     this->image_debug_pub_ = image_transport::create_camera_publisher(this, "/image_debug", rmw_qos_profile_default);
+    this->contour_pub_ = this->create_publisher<geometry_msgs::msg::PolygonStamped>("/contour", 10);
 
     this->object_type_sub_ = this->create_subscription<std_msgs::msg::Int8>
                 ("/object", rclcpp::SensorDataQoS(), std::bind(&ClassifyNode::ObjectCallBack, this, std::placeholders::_1));
@@ -37,6 +43,7 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
     std::vector<std::vector<cv::Point>> contours1, contours2;
     this->image_ = cv_bridge::toCvShare(img, "bgr8")->image;
     mark = this->image_.clone();
+    this->arm_center_ = cv::Point(mark.cols / 2 + offset_u_, mark.rows / 2 + offset_v_);
 
     /* 转变成为灰度图 */    cv::cvtColor(this->image_, gray, cv::COLOR_BGR2GRAY);
     /* 第一级边缘检测 */    cv::Canny(gray, edges, first_canny_low_threshold_, first_canny_high_threshold_);
@@ -47,7 +54,7 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
 
     std::sort(contours2.begin(), contours2.end(), 
             [](const std::vector<cv::Point> &a, const std::vector<cv::Point> &b){return cv::contourArea(a) > cv::contourArea(b);});
-    /* TODO : test */ this->object_type_ = 1;
+    /* TODO : test */ this->object_type_ = 0;
     switch(this->object_type_)
     {
         case (int)ObjectType::RUBIKCUBE: {findRubikCube(mark, contours2); break;}
@@ -55,11 +62,11 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
         default: break;
     }
 
+    cv::circle(mark, arm_center_, 3, cv::Scalar(0, 255, 0), -1);
     auto header = img->header;
     this->image_mark_ = mark;
     this->image_debug_ = edges;
     this->ImagePub(header);
-
 }
 
 void ClassifyNode::ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg)
@@ -106,11 +113,29 @@ void ClassifyNode::ImagePub(std_msgs::msg::Header header)
     this->image_mark_pub_.publish(*mark, this->cam_info_);
 }
 
+void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
+{
+    if(contour.empty()) return;
+    this->contour_ = contour;
+
+    if(this->object_type_ == (int)ObjectType::RUBIKCUBE)    // 魔方边框处理
+    {
+        
+    }
+
+    if(this->object_type_ == (int)ObjectType::BILLIARDS)    // 台球边框处理
+    {
+        
+    }
+
+}
+
 void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours)
 {
     int count = 0;
     double MAXarea = -1;
     std::vector<cv::Point> MAXcontour;
+    std::vector<std::vector<cv::Point>> choose_contours = {};
     this->objects_.clear();
     
     for(auto & contour : contours)
@@ -122,6 +147,8 @@ void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Poin
         cv::approxPolyDP(contour, approx, cv::arcLength(cv::Mat(contour), true) * 0.02, true);
         if(approx.size() == 4)
         {
+            double area = cv::contourArea(approx);
+            if(area < min_area_ || area > max_area_) continue;
             if(MAXarea < cv::contourArea(approx))
             {
                 MAXarea = cv::contourArea(approx);
@@ -129,13 +156,27 @@ void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Poin
             }
             
             Object object(ObjectType::RUBIKCUBE, ObjectColor::NONE, approx);
+            choose_contours.push_back(approx);
             this->objects_.push_back(object);
             count++;
         }
     }
-    
-    if(!MAXcontour.empty())
-        cv::drawContours(mark, std::vector<std::vector<cv::Point>>{MAXcontour}, 0, cv::Scalar(0, 0, 255), 2);
+
+    auto choose = chooseObject(mark, choose_contours);
+    if(!choose.empty())
+    {   
+        this->ContourPub(choose);
+        
+        cv::Moments m = cv::moments(choose);
+        cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);
+        // if(!MAXcontour.empty())
+        //     cv::drawContours(mark, std::vector<std::vector<cv::Point>>{MAXcontour}, 0, cv::Scalar(0, 0, 255), 2);
+        std::vector<cv::Point> app;
+        cv::approxPolyDP(choose, app, cv::arcLength(cv::Mat(choose), true) * 0.02, true);
+        cv::drawContours(mark, std::vector<std::vector<cv::Point>>{app}, 0, cv::Scalar(0, 0, 255), 2);
+        cv::line(mark, center, arm_center_, cv::Scalar(0, 255, 0), 2);
+    }
+
 }
 
 void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours)
@@ -143,6 +184,7 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
     int count = 0;
     double MAXarea = -1;
     std::vector<cv::Point> MAXcontour;
+    std::vector<std::vector<cv::Point>> choose_contours = {};
     this->objects_.clear();
     
     double perimeter = 0, area = 0, circularity = 0;
@@ -156,25 +198,59 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
         circularity = (4 * CV_PI * area) / (perimeter * perimeter);
         if(circularity > 0.8)
         {
+            if(area < min_area_ || area > max_area_) continue;
             if(MAXarea < area)
             {
                 MAXarea = area;
                 MAXcontour = contour;
             }
-            // TODO : 台球颜色识别 
-            auto color = this->recogizeColor(mark, contour);
-            Object object(ObjectType::BILLIARDS, color, contour);
+            // TODO : 台球颜色识别——在HSV色彩空间中寻找最近的”距离“
+            // auto color = this->recogizeColor(mark, contour);
+            Object object(ObjectType::BILLIARDS, ObjectColor::NONE, contour);
+            choose_contours.push_back(contour);
             this->objects_.push_back(object);
             count++;
         } 
     }
 
-    cv::Moments m = cv::moments(MAXcontour);
-    cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);
-    int size = static_cast<int>(std::sqrt(MAXarea / CV_PI));
-    if(!MAXcontour.empty())
+    // cv::Moments m = cv::moments(MAXcontour);
+    // cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);
+    // int size = static_cast<int>(std::sqrt(MAXarea / CV_PI));
+    // if(!MAXcontour.empty())
+    //     cv::circle(mark, center, size, cv::Scalar(0, 0, 255), 2);
+    auto choose = chooseObject(mark, choose_contours);
+    if(!choose.empty())
+    {
+        this->ContourPub(choose);
+        
+        cv::Moments m = cv::moments(choose);
+        cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);
+        double circle_area = cv::contourArea(choose);
+        int size = static_cast<int>(std::sqrt(circle_area / CV_PI));
         cv::circle(mark, center, size, cv::Scalar(0, 0, 255), 2);
-    
+        cv::line(mark, center, arm_center_, cv::Scalar(0, 255, 0), 2);
+    }
+}
+
+std::vector<cv::Point> ClassifyNode::chooseObject(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours)
+{
+    double min_dist = INFINITY;
+    std::vector<cv::Point> choose = {};
+    int center_x = mark.cols / 2 + this->offset_u_;
+    int center_y = mark.rows / 2 + this->offset_v_;
+    for(auto & contour : contours)
+    {
+        if(contour.empty()) continue;
+        cv::Moments m = cv::moments(contour);
+        cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);
+        double dist = std::sqrt((center.x - center_x) * (center.x - center_x) + (center.y - center_y) * (center.y - center_y));
+        if(dist < min_dist)
+        {
+            min_dist = dist;
+            choose = contour;
+        }
+    }
+    return choose;
 }
 
 ObjectColor ClassifyNode::recogizeColor(cv::Mat& mark, std::vector<cv::Point>& contour)
@@ -183,7 +259,7 @@ ObjectColor ClassifyNode::recogizeColor(cv::Mat& mark, std::vector<cv::Point>& c
     cv::drawContours(mask, std::vector<cv::Point>{contour}, -1, cv::Scalar(255), cv::FILLED);
     cv::Mat roi = mark & mask;
 
-
+    return ObjectColor::NONE;
 }
 
 }

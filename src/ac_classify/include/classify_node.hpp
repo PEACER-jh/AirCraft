@@ -16,6 +16,7 @@
 #include "image_transport/publisher.hpp"
 #include "image_transport/subscriber.hpp"
 #include "image_transport/image_transport.hpp"
+#include "geometry_msgs/msg/polygon_stamped.hpp"
 #include "camera_info_manager/camera_info_manager.hpp"
 #include "rcl_interfaces/msg/set_parameters_result.hpp"
 
@@ -37,6 +38,7 @@ public:
     void ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr & img);
     void CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstSharedPtr info);
     void ImagePub(std_msgs::msg::Header header);
+    void ContourPub(std::vector<cv::Point> contour);
 
 private:
     cv::Mat image_;
@@ -53,13 +55,24 @@ public:
     std::vector<Object> objects_;
 
     rclcpp::Subscription<std_msgs::msg::Int8>::SharedPtr object_type_sub_;
+    rclcpp::Publisher<geometry_msgs::msg::PolygonStamped>::SharedPtr contour_pub_;
     void ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg);
-    void findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours);   // 寻找魔方
-    void findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours);   // 寻找台球
-    ObjectColor recogizeColor(cv::Mat& mark, std::vector<cv::Point>& contour);                 // 识别颜色
+    void findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours);                   // 寻找魔方
+    void findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours);                   // 寻找台球
+    std::vector<cv::Point> chooseObject(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours);  // 选择对象
+    ObjectColor recogizeColor(cv::Mat& mark, std::vector<cv::Point>& contour);                          // 识别颜色(TODO)
 
 private:
     int object_type_;
+    std::vector<cv::Point> contour_;
+    geometry_msgs::msg::PolygonStamped contour_msg_;
+
+    double min_area_;   // 识别的最小面积
+    double max_area_;   // 识别的最大面积
+
+    int offset_u_;  // 图像中心点x方向（行）偏移量
+    int offset_v_;  // 图像中心点y方向（列）偏移量
+    cv::Point arm_center_;  // 手眼标定中心点
 
     int first_canny_low_threshold_;     // 第一级canny边缘检测低阈值
     int first_canny_high_threshold_;    // 第一级canny边缘检测高阈值
