@@ -54,6 +54,8 @@ void SolvePnPNode::initSolver()
 
 void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::SharedPtr contour)
 {
+    if(contour->polygon.points.size() != 4) return;
+
     this->contour_.clear();
     this->contour_.resize(4);
     std::vector<cv::Point> temp;
