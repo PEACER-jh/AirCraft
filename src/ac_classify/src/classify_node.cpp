@@ -122,7 +122,6 @@ void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
     this->contour_ = contour;
 
     // TODO : test
-    // this->polygons_.header.frame_id = "mark";
     // this->polygons_.header.frame_id = "RubikCube";
     this->polygons_.header.frame_id = "Billiards";
 

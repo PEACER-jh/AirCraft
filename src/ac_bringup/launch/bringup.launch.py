@@ -4,7 +4,7 @@ from ament_index_python.packages import get_package_share_directory
 
 sys.path.append(os.path.join(os.getcwd(), 'ac_bringup', 'launch'))
 def get_params(name):
-    return os.path.join(os.getcwd(), 'ac_bringup', 'config', '{}_params.yaml'.format(name))
+    return os.path.join(os.getcwd(), 'src', 'ac_bringup', 'config', '{}_params.yaml'.format(name))
 
 from launch import LaunchDescription
 from launch.actions import TimerAction, Shutdown

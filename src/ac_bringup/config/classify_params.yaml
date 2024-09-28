@@ -1,5 +1,5 @@
 /**:
-  ros_paramters:
+  ros__parameters:
     # 图像处理
     first_canny_low_threthold: 50
     first_canny_high_threthold: 100

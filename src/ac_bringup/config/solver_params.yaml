@@ -1,0 +1,4 @@
+/**:
+  ros__parameters:
+    arm_offset_x: 0.0
+    arm_offset_y: 0.0
