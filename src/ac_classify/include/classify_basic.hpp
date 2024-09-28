@@ -14,8 +14,8 @@ namespace ac_classify
 
 enum class ObjectType
 {
-    RUBIKCUBE,  // 魔方
-    BILLIARDS,  // 台球
+    RUBIKCUBE,  // 魔方 - 0
+    BILLIARDS,  // 台球 - 1
 };
 
 enum class ObjectColor
