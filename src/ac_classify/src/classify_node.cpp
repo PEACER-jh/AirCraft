@@ -53,7 +53,7 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
     /* 第二级边缘检测 */    cv::Canny(edges, edges, second_canny_low_threshold_, second_canny_high_threshold_);
     /* 第二级寻找轮廓 */    cv::findContours(edges, contours2, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
     
-    std::cout << " ****** contours size : " << contours2.size() << "******" << std::endl;
+    // std::cout << " ****** contours size : " << contours2.size() << "******" << std::endl;
     std::sort(contours2.begin(), contours2.end(), 
             [](const std::vector<cv::Point> &a, const std::vector<cv::Point> &b){return cv::contourArea(a) > cv::contourArea(b);});
     /* TODO : test */ this->object_type_ = 0;
@@ -187,7 +187,7 @@ void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Poin
     if(!choose.empty())
     {   
         // TODO : 边缘发布
-        // this->ContourPub(choose);
+        this->ContourPub(choose);
         
         cv::Moments m = cv::moments(choose);
         cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);
@@ -236,7 +236,7 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
     if(!choose.empty())
     {
         // TODO : 边缘发布
-        // this->ContourPub(choose);
+        this->ContourPub(choose);
         
         cv::Moments m = cv::moments(choose);
         cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);

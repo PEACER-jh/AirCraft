@@ -66,6 +66,12 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
     this->contour_[1] = temp[0].x < temp[1].x ? temp[1] : temp[0];
     this->contour_[2] = temp[2].x > temp[3].x ? temp[2] : temp[3];
     this->contour_[3] = temp[2].x > temp[3].x ? temp[3] : temp[2];
+
+    cv::Mat tVec, rVec;
+    if(contour->header.frame_id == "RubikCube")
+        cv::solvePnP(rubikcube_, contour_, camera_matrix, dist_coeffs_, rVec, tVec, false, cv::SOLVEPNP_ITERATIVE);
+    if(contour->header.frame_id == "Billiards");
+        cv::solvePnP(billiards_, contour_, camera_matrix, dist_coeffs_, rVec, tVec, false, cv::SOLVEPNP_ITERATIVE);
 }
 
 }
