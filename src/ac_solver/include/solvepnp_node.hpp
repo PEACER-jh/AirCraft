@@ -8,10 +8,12 @@
 #include <opencv2/opencv.hpp>
 
 #include "rclcpp/rclcpp.hpp"
+#include "tf2/LinearMath/Quaternion.h"
 #include "sensor_msgs/msg/camera_info.hpp"
 #include "geometry_msgs/msg/point32.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/polygon_stamped.hpp"
+#include "geometry_msgs/msg/quaternion_stamped.hpp"
 #include "camera_info_manager/camera_info_manager.hpp"
 
 namespace ac_solver
@@ -27,7 +29,7 @@ public:
 
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_sub_;
     rclcpp::Subscription<geometry_msgs::msg::PolygonStamped>::SharedPtr contour_sub_;
-    // rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
+    rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
 
     void initSolver();
     void CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstSharedPtr info);
@@ -44,6 +46,7 @@ private:
     std::vector<cv::Point> contour_;
     std::vector<cv::Point3d> rubikcube_;
     std::vector<cv::Point3d> billiards_;
+    geometry_msgs::msg::PoseStamped pose_;
 
 };
 

@@ -11,6 +11,7 @@ SolvePnPNode::SolvePnPNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
     this->arm_offset_x_ = this->declare_parameter<double>("arm_offset_x", 0);
     this->arm_offset_y_ = this->declare_parameter<double>("arm_offset_y", 0);
 
+    this->pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/pose", 10);
     this->camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>
                 ("/camera/info", rclcpp::SensorDataQoS(), std::bind(&SolvePnPNode::CameraInfoCallBack, this, std::placeholders::_1));
     this->contour_sub_ = this->create_subscription<geometry_msgs::msg::PolygonStamped>
@@ -37,7 +38,7 @@ void SolvePnPNode::CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstS
 
 void SolvePnPNode::initSolver()
 {
-    // 
+    // 边框四点按照从左上角开始顺时针排序
     rubikcube_.push_back(cv::Point3d(0.0, -RubikCubeSize / 2.0,  RubikCubeSize / 2.0));
     rubikcube_.push_back(cv::Point3d(0.0, -RubikCubeSize / 2.0, -RubikCubeSize / 2.0));
     rubikcube_.push_back(cv::Point3d(0.0,  RubikCubeSize / 2.0, -RubikCubeSize / 2.0));
@@ -72,6 +73,22 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
         cv::solvePnP(rubikcube_, contour_, camera_matrix, dist_coeffs_, rVec, tVec, false, cv::SOLVEPNP_ITERATIVE);
     if(contour->header.frame_id == "Billiards");
         cv::solvePnP(billiards_, contour_, camera_matrix, dist_coeffs_, rVec, tVec, false, cv::SOLVEPNP_ITERATIVE);
+
+    pose_.header = contour->header;
+    pose_.pose.position.x = tVec.at<double>(0);
+    pose_.pose.position.y = tVec.at<double>(1);
+    pose_.pose.position.z = tVec.at<double>(2);
+    tf2::Quaternion q;
+    cv::Mat R;
+    cv::Rodrigues(rVec, R);
+    q.setRPY(atan2(R.at<double>(2, 1), R.at<double>(2, 2)),
+             atan2(-R.at<double>(2, 0), sqrt(R.at<double>(2, 1) * R.at<double>(2, 1) + R.at<double>(2, 2) * R.at<double>(2, 2))),
+             atan2(R.at<double>(1, 0), R.at<double>(0, 0)));
+    pose_.pose.orientation.x = q.x();
+    pose_.pose.orientation.y = q.y();
+    pose_.pose.orientation.z = q.z();
+    pose_.pose.orientation.w = q.w();
+    this->pose_pub_->publish(pose_);
 }
 
 }
