@@ -56,7 +56,7 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
     // std::cout << " ****** contours size : " << contours2.size() << "******" << std::endl;
     std::sort(contours2.begin(), contours2.end(), 
             [](const std::vector<cv::Point> &a, const std::vector<cv::Point> &b){return cv::contourArea(a) > cv::contourArea(b);});
-    /* TODO : test */ this->object_type_ = 0;
+    /* TODO : test */ this->object_type_ = 1;
     switch(this->object_type_)
     {
         // 目标选取策略——在最大的前几个轮廓中选取质心距手眼标定处最近的轮廓
@@ -120,7 +120,12 @@ void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
 {
     this->polygons_.polygon.points.clear();
     this->contour_ = contour;
+
+    // TODO : test
     // this->polygons_.header.frame_id = "mark";
+    // this->polygons_.header.frame_id = "RubikCube";
+    this->polygons_.header.frame_id = "Billiards";
+
     this->polygons_.header.stamp = this->now();
 
     geometry_msgs::msg::Point32 p;

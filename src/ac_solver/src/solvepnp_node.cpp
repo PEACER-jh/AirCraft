@@ -71,10 +71,18 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
     this->contour_[3] = temp[2].x > temp[3].x ? temp[3] : temp[2];
 
     cv::Mat tVec, rVec;
-    if(contour->header.frame_id == "RubikCube")
+    if(contour->header.frame_id == "RubikCube"){
+        std::cout << "****** RubikCube ******" << std::endl;
         cv::solvePnP(rubikcube_, contour_, camera_matrix, dist_coeffs_, rVec, tVec, false, cv::SOLVEPNP_ITERATIVE);
-    if(contour->header.frame_id == "Billiards");
+    }
+    else if(contour->header.frame_id == "Billiards"){
+        std::cout << "****** Billiards ******" << std::endl;
         cv::solvePnP(billiards_, contour_, camera_matrix, dist_coeffs_, rVec, tVec, false, cv::SOLVEPNP_ITERATIVE);
+    }
+    else{
+        std::cout << "****** Unknown Object ******" << std::endl;
+        return;
+    }
 
     pose_.header = contour->header;
     pose_.pose.position.x = tVec.at<double>(0);
@@ -91,6 +99,7 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
     pose_.pose.orientation.z = q.z();
     pose_.pose.orientation.w = q.w();
     this->pose_pub_->publish(pose_);
+    std::cout << pose_.pose.position.x << " " << pose_.pose.position.y << " " << pose_.pose.position.z << std::endl;
 }
 
 }

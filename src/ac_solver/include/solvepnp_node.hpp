@@ -43,7 +43,7 @@ private:
 private:
     double arm_offset_x_;
     double arm_offset_y_;
-    std::vector<cv::Point> contour_;
+    std::vector<cv::Point2d> contour_;
     std::vector<cv::Point3d> rubikcube_;
     std::vector<cv::Point3d> billiards_;
     geometry_msgs::msg::PoseStamped pose_;
