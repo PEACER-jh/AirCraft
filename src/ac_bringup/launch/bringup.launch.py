@@ -26,9 +26,17 @@ def generate_launch_description():
         parameters=[get_params('classify')],
     )
 
+    solvepnp_node = Node(
+        package='ac_solver',
+        executable='solver_node',
+        output='screen',
+        parameters=[get_params('solver')],
+    )
+
     launch_list = [
         camera_node,
         classify_node,
+        solvepnp_node,
     ]
 
     return LaunchDescription(launch_list)
