@@ -83,7 +83,8 @@ void ClassifyNode::ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg)
                 case (int)ObjectType::BILLIARDS: return "Billiards";
                 default:                         return "Unknown";
             }};
-        RCLCPP_INFO(this->get_logger(), "****** Receive object type : %s ******", getType(msg->data));
+        this->polygons_.header.frame_id = getType(msg->data);
+        RCLCPP_INFO(this->get_logger(), "****** Receive object type : %s ******", this->polygons_.header.frame_id);
     }
     
     this->object_type_ = msg->data;
@@ -119,7 +120,7 @@ void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
 {
     this->polygons_.polygon.points.clear();
     this->contour_ = contour;
-    this->polygons_.header.frame_id = "mark";
+    // this->polygons_.header.frame_id = "mark";
     this->polygons_.header.stamp = this->now();
 
     geometry_msgs::msg::Point32 p;

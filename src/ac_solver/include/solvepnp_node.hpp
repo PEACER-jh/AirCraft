@@ -16,6 +16,9 @@
 
 namespace ac_solver
 {
+#define RubikCubeSize 0.560   // m
+#define BilliardsSize 0.525   // m
+
 class SolvePnPNode : public rclcpp::Node
 {
 public:
@@ -23,17 +26,24 @@ public:
     ~SolvePnPNode();
 
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_sub_;
+    rclcpp::Subscription<geometry_msgs::msg::PolygonStamped>::SharedPtr contour_sub_;
+    // rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
+
+    void initSolver();
     void CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstSharedPtr info);
+    void ContourCallBack(const geometry_msgs::msg::PolygonStamped::SharedPtr contour);
 
 private:
     cv::Mat camera_matrix;
     cv::Mat dist_coeffs_;
     sensor_msgs::msg::CameraInfo cam_info_;
 
-
-
 private:
-
+    double arm_offset_x_;
+    double arm_offset_y_;
+    std::vector<cv::Point> contour_;
+    std::vector<cv::Point3d> rubikcube_;
+    std::vector<cv::Point3d> billiards_;
 
 };
 

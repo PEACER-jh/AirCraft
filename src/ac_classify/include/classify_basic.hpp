@@ -65,15 +65,6 @@ cv::Scalar upper_pink(170, 255, 255);   // 粉色
 cv::Scalar lower_black(0, 0, 0);
 cv::Scalar upper_black(180, 255, 30);   // 黑色
 
-// std::vector<cv::Scalar[2]> color_ranges = {
-//     {lower_yellow, upper_yellow},
-//     {lower_green, upper_green},
-//     {lower_brown, upper_brown},
-//     {lower_blue, upper_blue},
-//     {lower_pink, upper_pink},
-//     {lower_black, upper_black}
-// };
-
 }
 
 #endif // CLASSIFY_BASIC_HPP
