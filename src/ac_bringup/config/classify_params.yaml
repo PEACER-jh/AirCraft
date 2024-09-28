@@ -1,0 +1,15 @@
+/**:
+  ros_paramters:
+    # 图像处理
+    first_canny_low_threthold: 50
+    first_canny_high_threthold: 100
+    second_canny_low_threthold: 50
+    second_canny_high_threthold: 100
+    dilate_iterations: 5
+
+    # 识别筛选
+    min_area: 5000
+    max_area: 50000
+    offset_u: 0
+    offset_v: 0
+    max_contour_number: 5

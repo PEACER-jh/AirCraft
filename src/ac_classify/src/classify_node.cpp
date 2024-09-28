@@ -10,13 +10,13 @@ ClassifyNode::ClassifyNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
     this->max_area_ = this->declare_parameter<int>("max_area", 50000);
     this->offset_u_ = this->declare_parameter<int>("offset_u", 0);
     this->offset_v_ = this->declare_parameter<int>("offset_v", 0);
+    this->max_contour_number = this->declare_parameter<int>("max_contour_number", 5);
 
     this->first_canny_low_threshold_ = this->declare_parameter<int>("first_canny_low_threthold", 50);
     this->first_canny_high_threshold_ = this->declare_parameter<int>("first_canny_high_threthold", 150);
     this->second_canny_low_threshold_ = this->declare_parameter<int>("second_canny_low_threthold", 50);
     this->second_canny_high_threshold_ = this->declare_parameter<int>("second_canny_high_threthold", 150);
     this->dilate_iterations_ = this->declare_parameter<int>("dilate_iterations", 5);
-    this->max_contour_number = this->declare_parameter<int>("max_contour_number", 5);
 
     this->image_mark_pub_ = image_transport::create_camera_publisher(this, "/image_mark", rmw_qos_profile_default);
     this->image_debug_pub_ = image_transport::create_camera_publisher(this, "/image_debug", rmw_qos_profile_default);
