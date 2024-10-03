@@ -40,7 +40,7 @@ public:
 
     void ModeCallBack();
     void PoseCallBack(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
-
+    
 private:
     ReceivePackage receive_package_;
     SendPackage send_package_;
@@ -49,6 +49,7 @@ private:
     rclcpp::Publisher<std_msgs::msg::Int8>::SharedPtr mode_pub_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
 
+    ObjectType object_type_;
     std_msgs::msg::Int8 mode_msg_;
     geometry_msgs::msg::PoseStamped pose_msg_;
 

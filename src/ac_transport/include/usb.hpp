@@ -3,8 +3,8 @@
 
 #include "sdk/include/usbcdc_transporter.hpp"
 
-#define RECEIVE_ID 0x1
 #define SEND_ID 0x2
+#define RECEIVE_ID 0x1
 
 namespace ac_transport
 {
@@ -16,6 +16,11 @@ typedef signed int      int32_t;
 typedef unsigned int    uint32_t;
 
 #pragma pack(push, 1)
+enum class ObjectType
+{
+    RUBIKCUBE,  // 魔方 - 0
+    BILLIARDS,  // 台球 - 1
+};
 
 typedef struct 
 {
@@ -23,7 +28,7 @@ typedef struct
     uint8_t _SOF;
     uint8_t ID;
     // 数据
-    int32_t mode;
+    int8_t mode;
     // 包尾
     uint8_t _EOF;
 }ReceivePackage;
