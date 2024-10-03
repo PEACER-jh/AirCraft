@@ -23,7 +23,7 @@ ClassifyNode::ClassifyNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
     this->contour_pub_ = this->create_publisher<geometry_msgs::msg::PolygonStamped>("/contour", 10);
 
     this->object_type_sub_ = this->create_subscription<std_msgs::msg::Int8>
-                ("/object", rclcpp::SensorDataQoS(), std::bind(&ClassifyNode::ObjectCallBack, this, std::placeholders::_1));
+                ("/mode", rclcpp::SensorDataQoS(), std::bind(&ClassifyNode::ObjectCallBack, this, std::placeholders::_1));
     this->camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>
                 ("/camera/info", rclcpp::SensorDataQoS(), std::bind(&ClassifyNode::CameraInfoCallBack, this, std::placeholders::_1));
     this->image_sub_ = std::make_shared<image_transport::Subscriber>(image_transport::create_subscription(
@@ -56,7 +56,6 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
     // std::cout << " ****** contours size : " << contours2.size() << "******" << std::endl;
     std::sort(contours2.begin(), contours2.end(), 
             [](const std::vector<cv::Point> &a, const std::vector<cv::Point> &b){return cv::contourArea(a) > cv::contourArea(b);});
-    /* TODO : test */ this->object_type_ = 1;
     switch(this->object_type_)
     {
         // 目标选取策略——在最大的前几个轮廓中选取质心距手眼标定处最近的轮廓
@@ -121,11 +120,12 @@ void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
     this->polygons_.polygon.points.clear();
     this->contour_ = contour;
 
-    // TODO : test
-    // this->polygons_.header.frame_id = "RubikCube";
-    this->polygons_.header.frame_id = "Billiards";
-
+    this->polygons_.header.frame_id = "None";
     this->polygons_.header.stamp = this->now();
+    if(this->object_type_ == (int)ObjectType::RUBIKCUBE)
+        this->polygons_.header.frame_id = "RubikCube";   
+    else if(this->object_type_ == (int)ObjectType::BILLIARDS)
+        this->polygons_.header.frame_id = "Billiards";
 
     geometry_msgs::msg::Point32 p;
     if(this->object_type_ == (int)ObjectType::RUBIKCUBE)    // 魔方边框处理
@@ -190,7 +190,6 @@ void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Poin
     auto choose = chooseObject(mark, choose_contours);
     if(!choose.empty())
     {   
-        // TODO : 边缘发布
         this->ContourPub(choose);
         
         cv::Moments m = cv::moments(choose);
@@ -239,7 +238,6 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
     auto choose = chooseObject(mark, choose_contours);
     if(!choose.empty())
     {
-        // TODO : 边缘发布
         this->ContourPub(choose);
         
         cv::Moments m = cv::moments(choose);

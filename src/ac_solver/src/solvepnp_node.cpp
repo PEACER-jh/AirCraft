@@ -71,11 +71,11 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
     this->contour_[3] = temp[2].x > temp[3].x ? temp[3] : temp[2];
 
     cv::Mat tVec, rVec;
-    if(contour->header.frame_id == "RubikCube"){
+    if(contour->header.frame_id == "RubikCube"){        // 魔方pnp解算
         std::cout << "****** RubikCube ******" << std::endl;
         cv::solvePnP(rubikcube_, contour_, camera_matrix, dist_coeffs_, rVec, tVec, false, cv::SOLVEPNP_ITERATIVE);
     }
-    else if(contour->header.frame_id == "Billiards"){
+    else if(contour->header.frame_id == "Billiards"){   // 台球pnp解算
         std::cout << "****** Billiards ******" << std::endl;
         cv::solvePnP(billiards_, contour_, camera_matrix, dist_coeffs_, rVec, tVec, false, cv::SOLVEPNP_ITERATIVE);
     }
