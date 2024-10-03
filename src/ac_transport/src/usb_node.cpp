@@ -32,9 +32,9 @@ UsbNode::UsbNode(const rclcpp::NodeOptions &options) : rclcpp::Node("usb_node", 
         this->interface_usb_write_timeout_
     );
     if (transporter_->open() == true) 
-        RCLCPP_INFO(this->get_logger(), "Success");
+        RCLCPP_INFO(this->get_logger(), "Open usb transport SUCCESS!!!");
     else
-        RCLCPP_INFO(this->get_logger(), "FAILED!!!");
+        RCLCPP_INFO(this->get_logger(), "Open usb transport FAILED!!!");
     RCLCPP_INFO(this->get_logger(), "Finish Init");
 
     this->callback_handle_ = this->add_on_set_parameters_callback(std::bind(&UsbNode::parametersCallback, this, std::placeholders::_1));
