@@ -17,12 +17,12 @@ UsbNode::UsbNode(const rclcpp::NodeOptions &options) : rclcpp::Node("usb_node", 
     this->receive_timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&UsbNode::ModeCallBack, this));
     this->mode_pub_ = this->create_publisher<std_msgs::msg::Int8>("/mode", 10);
 
-    interface_usb_vid_ = this->declare_parameter("interface_usb_vid", 0x0483);
-    interface_usb_pid_ = this->declare_parameter("interface_usb_pid", 0x5740);
-    interface_usb_read_endpoint_ = this->declare_parameter("interface_usb_read_endpoint", 0x81);
-    interface_usb_write_endpoint_ = this->declare_parameter("interface_usb_write_endpoint", 0x01);
-    interface_usb_read_timeout_ = this->declare_parameter("interface_usb_read_timeout", 1);
-    interface_usb_write_timeout_ = this->declare_parameter("interface_usb_write_timeout", 1);
+    this->interface_usb_vid_ = this->declare_parameter<int>("interface_usb_vid", 0x0483);
+    this->interface_usb_pid_ = this->declare_parameter<int>("interface_usb_pid", 0x5740);
+    this->interface_usb_read_endpoint_ = this->declare_parameter<int>("interface_usb_read_endpoint", 0x81);
+    this->interface_usb_write_endpoint_ = this->declare_parameter<int>("interface_usb_write_endpoint", 0x01);
+    this->interface_usb_read_timeout_ = this->declare_parameter<int>("interface_usb_read_timeout", 1);
+    this->interface_usb_write_timeout_ = this->declare_parameter<int>("interface_usb_write_timeout", 1);
     this->transporter_ = std::make_shared<transporter_sdk::UsbcdcTransporter>(
         this->interface_usb_vid_, 
         this->interface_usb_pid_, 
@@ -31,6 +31,11 @@ UsbNode::UsbNode(const rclcpp::NodeOptions &options) : rclcpp::Node("usb_node", 
         this->interface_usb_read_timeout_, 
         this->interface_usb_write_timeout_
     );
+    if (transporter_->open() == true) 
+        RCLCPP_INFO(this->get_logger(), "Success");
+    else
+        RCLCPP_INFO(this->get_logger(), "FAILED!!!");
+    RCLCPP_INFO(this->get_logger(), "Finish Init");
 
     this->callback_handle_ = this->add_on_set_parameters_callback(std::bind(&UsbNode::parametersCallback, this, std::placeholders::_1));
 

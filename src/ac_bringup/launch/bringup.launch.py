@@ -33,10 +33,18 @@ def generate_launch_description():
         parameters=[get_params('solver')],
     )
 
+    transport_node = Node(
+        package='ac_transport',
+        executable='usb_node',
+        output='screen',
+        parameters=[get_params('transport')],
+    )
+
     launch_list = [
         camera_node,
         classify_node,
         solvepnp_node,
+        transport_node,
     ]
 
     return LaunchDescription(launch_list)
