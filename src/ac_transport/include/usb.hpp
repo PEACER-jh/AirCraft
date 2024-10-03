@@ -22,7 +22,7 @@ enum class ObjectType
     BILLIARDS,  // 台球 - 1
 };
 
-typedef struct 
+typedef struct  // 接收包
 {
     // 包头
     uint8_t _SOF;
@@ -33,7 +33,7 @@ typedef struct
     uint8_t _EOF;
 }ReceivePackage;
 
-typedef struct 
+typedef struct  // 发送包
 {
     // 包头
     uint8_t _SOF;

@@ -16,7 +16,10 @@ UsbNode::UsbNode(const rclcpp::NodeOptions &options) : rclcpp::Node("usb_node", 
 
     this->receive_timer_ = this->create_wall_timer(std::chrono::milliseconds(100), std::bind(&UsbNode::ModeCallBack, this));
     this->mode_pub_ = this->create_publisher<std_msgs::msg::Int8>("/mode", 10);
+    
+    this->callback_handle_ = this->add_on_set_parameters_callback(std::bind(&UsbNode::parametersCallback, this, std::placeholders::_1));
 
+    // 初始化usb
     this->interface_usb_vid_ = this->declare_parameter<int>("interface_usb_vid", 0x0483);
     this->interface_usb_pid_ = this->declare_parameter<int>("interface_usb_pid", 0x5740);
     this->interface_usb_read_endpoint_ = this->declare_parameter<int>("interface_usb_read_endpoint", 0x81);
@@ -36,9 +39,6 @@ UsbNode::UsbNode(const rclcpp::NodeOptions &options) : rclcpp::Node("usb_node", 
     else
         RCLCPP_INFO(this->get_logger(), "Open usb transport FAILED!!!");
     RCLCPP_INFO(this->get_logger(), "Finish Init");
-
-    this->callback_handle_ = this->add_on_set_parameters_callback(std::bind(&UsbNode::parametersCallback, this, std::placeholders::_1));
-
 }
 
 UsbNode::~UsbNode()

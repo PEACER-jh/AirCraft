@@ -53,12 +53,11 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
     /* 第二级边缘检测 */    cv::Canny(edges, edges, second_canny_low_threshold_, second_canny_high_threshold_);
     /* 第二级寻找轮廓 */    cv::findContours(edges, contours2, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
     
-    // std::cout << " ****** contours size : " << contours2.size() << "******" << std::endl;
+    // 目标选取策略——在最大的前几个轮廓中选取质心距手眼标定处最近的轮廓
     std::sort(contours2.begin(), contours2.end(), 
             [](const std::vector<cv::Point> &a, const std::vector<cv::Point> &b){return cv::contourArea(a) > cv::contourArea(b);});
     switch(this->object_type_)
     {
-        // 目标选取策略——在最大的前几个轮廓中选取质心距手眼标定处最近的轮廓
         case (int)ObjectType::RUBIKCUBE: { findRubikCube(mark, contours2); break; }
         case (int)ObjectType::BILLIARDS: { findBilliards(mark, contours2); break; }
         default: break;
@@ -104,11 +103,13 @@ void ClassifyNode::CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstS
 
 void ClassifyNode::ImagePub(std_msgs::msg::Header header)
 {
+    // debug 图像发布
     sensor_msgs::msg::Image::SharedPtr debug;
     debug = cv_bridge::CvImage(std_msgs::msg::Header(), "mono8", this->image_debug_).toImageMsg();
     debug->header = header;
     this->image_debug_pub_.publish(*debug, this->cam_info_);
 
+    // mark 图像发布
     sensor_msgs::msg::Image::SharedPtr mark;
     mark = cv_bridge::CvImage(std_msgs::msg::Header(), "bgr8", this->image_mark_).toImageMsg();
     mark->header = header;
@@ -120,6 +121,7 @@ void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
     this->polygons_.polygon.points.clear();
     this->contour_ = contour;
 
+    // 为发布消息赋frame_id，为解算节点作判断作准备
     this->polygons_.header.frame_id = "None";
     this->polygons_.header.stamp = this->now();
     if(this->object_type_ == (int)ObjectType::RUBIKCUBE)
@@ -130,6 +132,7 @@ void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
     geometry_msgs::msg::Point32 p;
     if(this->object_type_ == (int)ObjectType::RUBIKCUBE)    // 魔方边框处理
     {
+        // 四边形的四个顶点
        for(auto point : contour_)
        {
             p.x = point.x;
@@ -140,6 +143,7 @@ void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
     }
     if(this->object_type_ == (int)ObjectType::BILLIARDS)    // 台球边框处理
     {
+        // 圆形最大内接矩形的四个顶点
         cv::Rect rect = cv::boundingRect(contour);
         int length = std::min(rect.width, rect.height);
 
@@ -155,6 +159,7 @@ void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
     this->contour_pub_->publish(this->polygons_);
 }
 
+// 寻找魔方轮廓
 void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours)
 {
     int count = 0;
@@ -201,6 +206,7 @@ void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Poin
     }
 }
 
+// 寻找台球轮廓
 void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours)
 {
     int count = 0;
@@ -249,6 +255,7 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
     }
 }
 
+// 筛选出最后的目标轮廓
 std::vector<cv::Point> ClassifyNode::chooseObject(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours)
 {
     double min_dist = INFINITY;

@@ -1,5 +1,5 @@
-#ifndef CLASSIFY_BASIC_HPP
-#define CLASSIFY_BASIC_HPP
+#ifndef AC_CLASSIFY_BASIC_HPP
+#define AC_CLASSIFY_BASIC_HPP
 
 #include <vector>
 #include <iostream>
@@ -67,4 +67,4 @@ cv::Scalar upper_black(180, 255, 30);   // 黑色
 
 }
 
-#endif // CLASSIFY_BASIC_HPP
+#endif // AC_CLASSIFY_BASIC_HPP

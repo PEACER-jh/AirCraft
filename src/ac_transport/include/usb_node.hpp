@@ -38,15 +38,15 @@ public:
     rclcpp::Time last_receive_time_;
     rclcpp::TimerBase::SharedPtr receive_timer_;
 
-    void ModeCallBack();
-    void PoseCallBack(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+    void ModeCallBack();                                                        // USB接收回调函数
+    void PoseCallBack(const geometry_msgs::msg::PoseStamped::SharedPtr msg);    // 目标位姿回调函数
     
 private:
-    ReceivePackage receive_package_;
     SendPackage send_package_;
+    ReceivePackage receive_package_;
     std::shared_ptr<transporter_sdk::TransporterInterface> transporter_;
 
-    rclcpp::Publisher<std_msgs::msg::Int8>::SharedPtr mode_pub_;
+    rclcpp::Publisher<std_msgs::msg::Int8>::SharedPtr mode_pub_;                
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_sub_;
 
     ObjectType object_type_;

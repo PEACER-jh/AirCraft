@@ -85,8 +85,8 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
     }
 
     pose_.header = contour->header;
-    pose_.pose.position.x = tVec.at<double>(0);
-    pose_.pose.position.y = tVec.at<double>(1);
+    pose_.pose.position.x = tVec.at<double>(0) + this->arm_offset_x_;
+    pose_.pose.position.y = tVec.at<double>(1) + this->arm_offset_y_;
     pose_.pose.position.z = tVec.at<double>(2);
     tf2::Quaternion q;
     cv::Mat R;

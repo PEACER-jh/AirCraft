@@ -1,5 +1,5 @@
-#ifndef CLASSIFY_NODE_HPP
-#define CLASSIFY_NODE_HPP
+#ifndef AC_CLASSIFY_NODE_HPP
+#define AC_CLASSIFY_NODE_HPP
 
 #include <vector>
 #include <iostream>
@@ -36,10 +36,10 @@ public:
     std::shared_ptr<image_transport::Subscriber> image_sub_;
     rclcpp::Subscription<sensor_msgs::msg::CameraInfo>::SharedPtr camera_info_sub_;
 
-    void ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr & img);
-    void CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstSharedPtr info);
-    void ImagePub(std_msgs::msg::Header header);
-    void ContourPub(std::vector<cv::Point> contour);
+    void ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr & img);            // 读取图像
+    void CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstSharedPtr info);   // 读取相机内参
+    void ImagePub(std_msgs::msg::Header header);        // 发布图像
+    void ContourPub(std::vector<cv::Point> contour);    // 发布轮廓
 
 private:
     cv::Mat image_;
@@ -86,4 +86,4 @@ private:
 
 }
 
-#endif // CLASSIFY_NODE_HPP
+#endif // AC_CLASSIFY_NODE_HPP
