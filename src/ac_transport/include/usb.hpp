@@ -39,8 +39,8 @@ typedef struct  // 发送包
     uint8_t _SOF;
     uint8_t ID;
     // 数据
-    float x;
-    float y;
+    uint8_t x[4];
+    uint8_t y[4];
     // 包尾
     uint8_t _EOF;
 }SendPackage;

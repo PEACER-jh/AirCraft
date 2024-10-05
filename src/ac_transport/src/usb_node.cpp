@@ -51,8 +51,8 @@ void UsbNode::PoseCallBack(const geometry_msgs::msg::PoseStamped::SharedPtr pose
     this->send_package_._SOF = 0x55;
     this->send_package_.ID = SEND_ID;
     this->send_package_._EOF = 0xFF;
-    this->send_package_.x = pose->pose.position.x;
-    this->send_package_.y = pose->pose.position.y;
+    std::memcpy(&this->send_package_.x[0], &pose->pose.position.x, sizeof(float));
+    std::memcpy(&this->send_package_.y[0], &pose->pose.position.y, sizeof(float));
     
     this->transporter_->write((unsigned char *)&this->send_package_, sizeof(SendPackage));
 }
@@ -67,8 +67,9 @@ void UsbNode::ModeCallBack()
     {
         ReceivePackage package;
         std::memcpy(&package, receive, size);
-        auto mode = package.mode;
+        auto mode = package.mode & 0x01;
         RCLCPP_INFO(this->get_logger(), "[ %s ] receive mode from aircraft: %d", this->get_name(), mode);
+
         this->mode_pub_->publish(mode);
     }
 }
