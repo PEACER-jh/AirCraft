@@ -11,6 +11,7 @@ SolvePnPNode::SolvePnPNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
     this->arm_offset_x_ = this->declare_parameter<double>("arm_offset_x", 0);
     this->arm_offset_y_ = this->declare_parameter<double>("arm_offset_y", 0);
 
+    this->tf_broadcaster_ = std::make_shared<tf2_ros::TransformBroadcaster>(this);
     this->pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>("/pose", 10);
     this->camera_info_sub_ = this->create_subscription<sensor_msgs::msg::CameraInfo>
                 ("/camera/info", rclcpp::SensorDataQoS(), std::bind(&SolvePnPNode::CameraInfoCallBack, this, std::placeholders::_1));
@@ -44,7 +45,7 @@ void SolvePnPNode::initSolver()
     rubikcube_.push_back(cv::Point3d(0.0,  RubikCubeSize / 2.0, -RubikCubeSize / 2.0));
     rubikcube_.push_back(cv::Point3d(0.0,  RubikCubeSize / 2.0,  RubikCubeSize / 2.0));
 
-    double factor = 2.0 * sqrt(2.0);
+    double factor = 2.0 * std::sqrt(2.0);
     billiards_.push_back(cv::Point3d(0.0, -BilliardsSize / factor,  BilliardsSize / factor));
     billiards_.push_back(cv::Point3d(0.0, -BilliardsSize / factor, -BilliardsSize / factor));
     billiards_.push_back(cv::Point3d(0.0,  BilliardsSize / factor, -BilliardsSize / factor));
@@ -64,12 +65,18 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
         cv::Point p = cv::Point(point.x, point.y);
         temp.push_back(p);
     }
-    std::sort(temp.begin(), temp.end(), [](cv::Point a, cv::Point b){return a.y < b.y;});
-    this->contour_[0] = temp[0].x < temp[1].x ? temp[0] : temp[1];
-    this->contour_[1] = temp[0].x < temp[1].x ? temp[1] : temp[0];
-    this->contour_[2] = temp[2].x > temp[3].x ? temp[2] : temp[3];
-    this->contour_[3] = temp[2].x > temp[3].x ? temp[3] : temp[2];
+    // std::sort(temp.begin(), temp.end(), [](cv::Point a, cv::Point b){return a.y < b.y;});
+    // this->contour_[0] = temp[0].x < temp[1].x ? temp[0] : temp[1];
+    // this->contour_[1] = temp[0].x < temp[1].x ? temp[1] : temp[0];
+    // this->contour_[2] = temp[2].x > temp[3].x ? temp[2] : temp[3];
+    // this->contour_[3] = temp[2].x > temp[3].x ? temp[3] : temp[2];
+    std::sort(temp.begin(), temp.end(), [](cv::Point a, cv::Point b){return a.x < b.x;});
+    this->contour_[0] = temp[0].y < temp[1].y ? temp[0] : temp[1];
+    this->contour_[1] = temp[0].y < temp[1].y ? temp[1] : temp[0];
+    this->contour_[2] = temp[2].y > temp[3].y ? temp[2] : temp[3];
+    this->contour_[3] = temp[2].y > temp[3].y ? temp[3] : temp[2];
 
+    
     cv::Mat tVec, rVec;
     if(contour->header.frame_id == "RubikCube"){        // 魔方pnp解算
         std::cout << "****** RubikCube ******" << std::endl;
@@ -85,9 +92,9 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
     }
 
     pose_.header = contour->header;
-    pose_.pose.position.x = tVec.at<double>(0) + this->arm_offset_x_;
-    pose_.pose.position.y = tVec.at<double>(1) + this->arm_offset_y_;
-    pose_.pose.position.z = tVec.at<double>(2);
+    pose_.pose.position.x = tVec.at<double>(0);
+    pose_.pose.position.y = tVec.at<double>(1) + this->arm_offset_x_;
+    pose_.pose.position.z = tVec.at<double>(2) + this->arm_offset_y_;
     tf2::Quaternion q;
     cv::Mat R;
     cv::Rodrigues(rVec, R);
@@ -99,7 +106,22 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
     pose_.pose.orientation.z = q.z();
     pose_.pose.orientation.w = q.w();
     this->pose_pub_->publish(pose_);
-    std::cout << pose_.pose.position.x << " " << pose_.pose.position.y << " " << pose_.pose.position.z << std::endl;
+    std::cout << "oringin:\t" << pose_.pose.position.x << " " << pose_.pose.position.y << " " << pose_.pose.position.z << std::endl;
+    std::cout << "send:\t\t" << -pose_.pose.position.y << " " << -pose_.pose.position.z << std::endl;
+
+    geometry_msgs::msg::TransformStamped tf;
+    tf.header.stamp = this->pose_.header.stamp;
+    tf.header.frame_id = contour->header.frame_id;
+    tf.child_frame_id = "camera";
+    tf.transform.translation.x = pose_.pose.position.x * 100;
+    tf.transform.translation.y = pose_.pose.position.y * 100;
+    tf.transform.translation.z = pose_.pose.position.z * 100;
+    tf.transform.rotation.x = pose_.pose.orientation.x;
+    tf.transform.rotation.y = pose_.pose.orientation.y;
+    tf.transform.rotation.z = pose_.pose.orientation.z;
+    tf.transform.rotation.w = pose_.pose.orientation.w;
+    this->tf_broadcaster_->sendTransform(tf);
+
 }
 
 }

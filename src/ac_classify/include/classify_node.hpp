@@ -38,8 +38,8 @@ public:
 
     void ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr & img);            // 读取图像
     void CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstSharedPtr info);   // 读取相机内参
-    void ImagePub(std_msgs::msg::Header header);        // 发布图像
-    void ContourPub(std::vector<cv::Point> contour);    // 发布轮廓
+    void ImagePub(std_msgs::msg::Header header);                        // 发布图像
+    void ContourPub(cv::Mat &mark, std::vector<cv::Point> contour);     // 发布轮廓
 
 private:
     cv::Mat image_;
@@ -64,7 +64,7 @@ public:
     ObjectColor recogizeColor(cv::Mat& mark, std::vector<cv::Point>& contour);                          // 识别颜色(TODO)
 
 private:
-    int object_type_ = (int)ObjectType::RUBIKCUBE;
+    int object_type_ = (int)ObjectType::BILLIARDS;
     std::vector<cv::Point> contour_;
     geometry_msgs::msg::PolygonStamped polygons_;
 
@@ -75,6 +75,8 @@ private:
     int offset_v_;  // 图像中心点y方向（列）偏移量
     cv::Point arm_center_;  // 手眼标定中心点
 
+    int bin_low_threshold_;             // 二值化低阈值
+    int bin_high_threshold_;            // 二值化高阈值
     int first_canny_low_threshold_;     // 第一级canny边缘检测低阈值
     int first_canny_high_threshold_;    // 第一级canny边缘检测高阈值
     int second_canny_low_threshold_;    // 第二级canny边缘检测低阈值

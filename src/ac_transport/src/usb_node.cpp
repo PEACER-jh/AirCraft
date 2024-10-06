@@ -51,10 +51,16 @@ void UsbNode::PoseCallBack(const geometry_msgs::msg::PoseStamped::SharedPtr pose
     this->send_package_._SOF = 0x55;
     this->send_package_.ID = SEND_ID;
     this->send_package_._EOF = 0xFF;
-    float xf = (float)pose->pose.position.y;
-    float yf = (float)pose->pose.position.z;
+    float xf = -(float)pose->pose.position.y;
+    float yf = -(float)pose->pose.position.z;
     std::memcpy(&this->send_package_.x[0], &xf, sizeof(float));
     std::memcpy(&this->send_package_.y[0], &yf, sizeof(float));
+
+    float xs;
+    float ys;
+    std::memcpy(&xs, &this->send_package_.x[0], sizeof(float));
+    std::memcpy(&ys, &this->send_package_.y[0], sizeof(float));
+    RCLCPP_INFO(this->get_logger(), "send x = %f, y = %f", xs, ys);
     
     this->transporter_->write((unsigned char *)&this->send_package_, sizeof(SendPackage));
 }

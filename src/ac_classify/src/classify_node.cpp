@@ -12,6 +12,8 @@ ClassifyNode::ClassifyNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
     this->offset_v_ = this->declare_parameter<int>("offset_v", 0);
     this->max_contour_number = this->declare_parameter<int>("max_contour_number", 5);
 
+    this->bin_low_threshold_ = this->declare_parameter<int>("bin_low_threshold", 50);
+    this->bin_high_threshold_ = this->declare_parameter<int>("bin_high_threshold", 255);
     this->first_canny_low_threshold_ = this->declare_parameter<int>("first_canny_low_threthold", 50);
     this->first_canny_high_threshold_ = this->declare_parameter<int>("first_canny_high_threthold", 150);
     this->second_canny_low_threshold_ = this->declare_parameter<int>("second_canny_low_threthold", 50);
@@ -40,14 +42,16 @@ ClassifyNode::~ClassifyNode()
 
 void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr & img)
 {
-    cv::Mat gray, blurred, edges, mark;
+    cv::Mat gray, blurred, bin, edges, mark;
     std::vector<std::vector<cv::Point>> contours1, contours2;
     this->image_ = cv_bridge::toCvShare(img, "bgr8")->image;
     mark = this->image_.clone();
     this->arm_center_ = cv::Point(mark.cols / 2 + offset_u_, mark.rows / 2 + offset_v_);
 
     /* 转变成为灰度图 */    cv::cvtColor(this->image_, gray, cv::COLOR_BGR2GRAY);
-    /* 第一级边缘检测 */    cv::Canny(gray, edges, first_canny_low_threshold_, first_canny_high_threshold_);
+    /* 高斯滤波器模糊 */    cv::GaussianBlur(gray, blurred, cv::Size(5, 5), 1);
+    /* 图像二值化去影 */    cv::threshold(blurred, bin, bin_low_threshold_, bin_high_threshold_, cv::THRESH_BINARY);
+    /* 第一级边缘检测 */    cv::Canny(blurred, edges, first_canny_low_threshold_, first_canny_high_threshold_);
     /* 对图像膨胀操作 */    cv::dilate(edges, edges, cv::Mat(), cv::Point(-1, -1), dilate_iterations_);
     /* 第一级寻找轮廓 */    cv::findContours(edges, contours1, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
     /* 第二级边缘检测 */    cv::Canny(edges, edges, second_canny_low_threshold_, second_canny_high_threshold_);
@@ -116,7 +120,7 @@ void ClassifyNode::ImagePub(std_msgs::msg::Header header)
     this->image_mark_pub_.publish(*mark, this->cam_info_);
 }
 
-void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
+void ClassifyNode::ContourPub(cv::Mat &mark, std::vector<cv::Point> contour)
 {
     this->polygons_.polygon.points.clear();
     this->contour_ = contour;
@@ -155,6 +159,11 @@ void ClassifyNode::ContourPub(std::vector<cv::Point> contour)
         polygons_.polygon.points.push_back(p);
         p.x = rect.x + length;   p.y = rect.y + length;   p.z = 0;
         polygons_.polygon.points.push_back(p);
+
+        cv::line(mark, cv::Point(rect.x, rect.y), cv::Point(rect.x + length, rect.y), cv::Scalar(0, 0, 255), 2);
+        cv::line(mark, cv::Point(rect.x + length, rect.y), cv::Point(rect.x + length, rect.y + length), cv::Scalar(0, 0, 255), 2);
+        cv::line(mark, cv::Point(rect.x + length, rect.y + length), cv::Point(rect.x, rect.y + length), cv::Scalar(0, 0, 255), 2);
+        cv::line(mark, cv::Point(rect.x, rect.y + length), cv::Point(rect.x, rect.y), cv::Scalar(0, 0, 255), 2);
     }
     this->contour_pub_->publish(this->polygons_);
 }
@@ -195,7 +204,7 @@ void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Poin
     auto choose = chooseObject(mark, choose_contours);
     if(!choose.empty())
     {   
-        this->ContourPub(choose);
+        this->ContourPub(mark ,choose);
         
         cv::Moments m = cv::moments(choose);
         cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);
@@ -244,7 +253,7 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
     auto choose = chooseObject(mark, choose_contours);
     if(!choose.empty())
     {
-        this->ContourPub(choose);
+        this->ContourPub(mark, choose);
         
         cv::Moments m = cv::moments(choose);
         cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);
