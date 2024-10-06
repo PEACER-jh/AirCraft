@@ -1,15 +1,15 @@
-image_width: 720
-image_height: 1280
+image_width: 640
+image_height: 480
 camera_name: UsbCam
 camera_matrix:
   rows: 3
   cols: 3
-  data: [1569.575079, 0.0, 655.825651, 0.0, 1569.978252, 532.056607, 0.0, 0.0, 1.0]
+  data: [467.969544, 0.0, 323.795370, 0.0, 465.731514, 242.192525, 0.0, 0.0, 1.0]
 distortion_model: plumb_bob
 distortion_coefficients:
   rows: 1
   cols: 5
-  data: [-0.287683, 0.279922, -0.000278, 0.000319, 0.0]
+  data: [-0.408865, 0.157859, 0.000187, -0.003615, 0.0]
 rectification_matrix: # 暂不使用
   rows: 3
   cols: 3
