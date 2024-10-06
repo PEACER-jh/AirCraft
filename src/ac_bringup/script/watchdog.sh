@@ -9,8 +9,8 @@ gnome-terminal -e 'bash -c "source /opt/ros/foxy/setup.bash;source /home/nuc/Des
 
 sleep 3
 
-while true
-do
+# while true
+# do
 
 camera_pid=$(ps -ef | grep "usb_cam_node" | grep -v grep | awk '{print $2}')
 classify_pid=$(ps -ef | grep "classify_node" | grep -v grep | awk '{print $2}')
@@ -60,6 +60,6 @@ fi
 
 sleep 3
 
-done
+# done
 
 exit 0

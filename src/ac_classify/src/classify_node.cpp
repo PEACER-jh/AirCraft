@@ -219,7 +219,7 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
     for(auto & contour : contours)
     {
         if(contour.empty()) continue;
-        if(count > this->max_contour_number || count > RubikCubeNum) break;
+        if(count > this->max_contour_number || count > RubikCubeNum) continue;;
     
         perimeter = cv::arcLength(contour, true);
         area = cv::contourArea(contour);

@@ -64,7 +64,7 @@ public:
     ObjectColor recogizeColor(cv::Mat& mark, std::vector<cv::Point>& contour);                          // 识别颜色(TODO)
 
 private:
-    int object_type_;
+    int object_type_ = (int)ObjectType::RUBIKCUBE;
     std::vector<cv::Point> contour_;
     geometry_msgs::msg::PolygonStamped polygons_;
 
