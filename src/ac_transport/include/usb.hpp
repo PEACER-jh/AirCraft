@@ -16,6 +16,7 @@ typedef signed int      int32_t;
 typedef unsigned int    uint32_t;
 
 #pragma pack(push, 1)
+
 enum class ObjectType
 {
     RUBIKCUBE,  // 魔方 - 0
@@ -28,7 +29,7 @@ typedef struct  // 接收包
     uint8_t _SOF;
     uint8_t ID;
     // 数据
-    int8_t mode;
+    uint8_t mode;
     // 包尾
     uint8_t _EOF;
 }ReceivePackage;

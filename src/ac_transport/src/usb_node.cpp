@@ -59,14 +59,15 @@ void UsbNode::PoseCallBack(const geometry_msgs::msg::PoseStamped::SharedPtr pose
 
 void UsbNode::ModeCallBack()
 {
-    const int size = sizeof(ReceivePackage);
-    uint8_t *receive = new uint8_t(size);
+    // const int size = sizeof(ReceivePackage);
+    const int size = 64;
+    uint8_t receive[size];
     int read_size = this->transporter_->read(receive, size);
 
     if(receive[1] == RECEIVE_ID)
     {
         ReceivePackage package;
-        std::memcpy(&package, receive, size);
+        std::memcpy(&package, receive, sizeof(ReceivePackage));
         auto mode = package.mode & 0x01;
         RCLCPP_INFO(this->get_logger(), "[ %s ] receive mode from aircraft: %d", this->get_name(), mode);
 
