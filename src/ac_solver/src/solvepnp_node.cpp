@@ -7,6 +7,7 @@ SolvePnPNode::SolvePnPNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
     RCLCPP_INFO(this->get_logger(), "Node [ %s ] is started ", this->get_name());
 
     this->initSolver();
+    this->initKalman();
     this->contour_.resize(4);
     this->arm_offset_x_ = this->declare_parameter<double>("arm_offset_x", 0);
     this->arm_offset_y_ = this->declare_parameter<double>("arm_offset_y", 0);
@@ -52,6 +53,39 @@ void SolvePnPNode::initSolver()
     billiards_.push_back(cv::Point3d(0.0,  BilliardsSize / factor,  BilliardsSize / factor));
 }
 
+void SolvePnPNode::initKalman()
+{
+    // 初始化状态转移矩阵 A
+    // 假设是匀速模型: 位置和速度
+    this->kf_.transitionMatrix = (cv::Mat_<float>(6, 6) << 
+        1, 0, 0, 1, 0, 0,  // 位置x和速度x的关系
+        0, 1, 0, 0, 1, 0,  // 位置y和速度y的关系
+        0, 0, 1, 0, 0, 1,  // 位置z和速度z的关系
+        0, 0, 0, 1, 0, 0,  // 速度x保持不变
+        0, 0, 0, 0, 1, 0,  // 速度y保持不变
+        0, 0, 0, 0, 0, 1   // 速度z保持不变
+    );
+
+    // 设置测量矩阵 H
+    this->kf_.measurementMatrix = (cv::Mat_<float>(3, 6) <<
+        1, 0, 0, 0, 0, 0,
+        0, 1, 0, 0, 0, 0,
+        0, 0, 1, 0, 0, 0);
+
+    // 初始化过程噪声协方差矩阵 Q（假设小噪声）
+    cv::setIdentity(this->kf_.processNoiseCov, cv::Scalar::all(1e-4));
+
+    // 初始化测量噪声协方差矩阵 R（假设中等噪声）
+    cv::setIdentity(this->kf_.measurementNoiseCov, cv::Scalar::all(1e-2));
+
+    // 初始化误差协方差矩阵 P
+    cv::setIdentity(this->kf_.errorCovPost, cv::Scalar::all(1));
+
+    // 初始化状态向量（初始位置和速度）
+    this->kf_.statePost = (cv::Mat_<float>(6, 1) << 0, 0, 0, 0, 0, 0);
+
+
+}
 
 void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::SharedPtr contour)
 {
@@ -65,11 +99,6 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
         cv::Point p = cv::Point(point.x, point.y);
         temp.push_back(p);
     }
-    // std::sort(temp.begin(), temp.end(), [](cv::Point a, cv::Point b){return a.y < b.y;});
-    // this->contour_[0] = temp[0].x < temp[1].x ? temp[0] : temp[1];
-    // this->contour_[1] = temp[0].x < temp[1].x ? temp[1] : temp[0];
-    // this->contour_[2] = temp[2].x > temp[3].x ? temp[2] : temp[3];
-    // this->contour_[3] = temp[2].x > temp[3].x ? temp[3] : temp[2];
     std::sort(temp.begin(), temp.end(), [](cv::Point a, cv::Point b){return a.x < b.x;});
     this->contour_[0] = temp[0].y < temp[1].y ? temp[0] : temp[1];
     this->contour_[1] = temp[0].y < temp[1].y ? temp[1] : temp[0];
@@ -91,20 +120,28 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
         return;
     }
 
+    cv::Mat prediction = this->kf_.predict();
+    cv::Mat measurement = (cv::Mat_<float>(3, 1) << tVec.at<double>(0), tVec.at<double>(1), tVec.at<double>(2));
+    cv::Mat estimated = this->kf_.correct(measurement);
+    cv::Point3f filtered_tvec(estimated.at<float>(0), estimated.at<float>(1), estimated.at<float>(2));
+
     pose_.header = contour->header;
-    pose_.pose.position.x = tVec.at<double>(0);
-    pose_.pose.position.y = tVec.at<double>(1) + this->arm_offset_x_;
-    pose_.pose.position.z = tVec.at<double>(2) + this->arm_offset_y_;
+    // pose_.pose.position.x = tVec.at<double>(0);
+    // pose_.pose.position.y = tVec.at<double>(1) + this->arm_offset_x_;
+    // pose_.pose.position.z = tVec.at<double>(2) + this->arm_offset_y_;
+    this->pose_.pose.position.x = filtered_tvec.x;
+    this->pose_.pose.position.y = filtered_tvec.y + this->arm_offset_x_;
+    this->pose_.pose.position.z = filtered_tvec.z + this->arm_offset_y_;
     tf2::Quaternion q;
     cv::Mat R;
     cv::Rodrigues(rVec, R);
     q.setRPY(atan2(R.at<double>(2, 1), R.at<double>(2, 2)),
              atan2(-R.at<double>(2, 0), sqrt(R.at<double>(2, 1) * R.at<double>(2, 1) + R.at<double>(2, 2) * R.at<double>(2, 2))),
              atan2(R.at<double>(1, 0), R.at<double>(0, 0)));
-    pose_.pose.orientation.x = q.x();
-    pose_.pose.orientation.y = q.y();
-    pose_.pose.orientation.z = q.z();
-    pose_.pose.orientation.w = q.w();
+    this->pose_.pose.orientation.x = q.x();
+    this->pose_.pose.orientation.y = q.y();
+    this->pose_.pose.orientation.z = q.z();
+    this->pose_.pose.orientation.w = q.w();
     this->pose_pub_->publish(pose_);
     std::cout << "oringin:\t" << pose_.pose.position.x << " " << pose_.pose.position.y << " " << pose_.pose.position.z << std::endl;
     std::cout << "send:\t\t" << -pose_.pose.position.y << " " << -pose_.pose.position.z << std::endl;
