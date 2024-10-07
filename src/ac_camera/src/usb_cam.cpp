@@ -23,7 +23,9 @@ UsbCamNode::UsbCamNode(const rclcpp::NodeOptions & options) : rclcpp::Node("usb_
         {
             if(!this->camera_.isOpen())
             {
-                RCLCPP_WARN(this->get_logger(), "[ %s ] Camera is not open!", this->get_name());
+                this->count_++;
+                if(this->count_ == 1)
+                    RCLCPP_WARN(this->get_logger(), "[ %s ] Camera is not open!", this->get_name());
                 this->camera_.SensorShut();
             }
             cv::Mat image;

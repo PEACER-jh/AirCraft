@@ -28,6 +28,7 @@ private:
     rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr cam_info_pub_;
     std::shared_ptr<camera_info_manager::CameraInfoManager> cam_info_manager_;
 
+    int count_ = 0;
     CamInterface camera_;
     sensor_msgs::msg::Image::SharedPtr image_;
     sensor_msgs::msg::CameraInfo cam_info_;
