@@ -64,9 +64,9 @@ public:
     ObjectColor recogizeColor(cv::Mat& mark, std::vector<cv::Point>& contour);                          // 识别颜色(TODO)
 
 private:
-    int object_type_ = (int)ObjectType::BILLIARDS;
     std::vector<cv::Point> contour_;
     geometry_msgs::msg::PolygonStamped polygons_;
+    int object_type_ = (int)ObjectType::RUBIKCUBE;  // 初始识别目标为魔方
 
     double min_area_;   // 识别的最小面积
     double max_area_;   // 识别的最大面积
