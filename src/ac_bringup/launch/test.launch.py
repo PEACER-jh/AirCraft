@@ -33,10 +33,21 @@ def generate_launch_description():
         parameters=[get_params('solver')],
     )
 
+    rviz_config_file = os.path.join(get_package_share_directory('ac_bringup'), 'config', 'aircraft.rviz')
+    rviz_node = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', rviz_config_file],
+        output='screen
+    )
+
+
     launch_list = [
         camera_node,
         classify_node,
         solvepnp_node,
+        rviz_node,
     ]
 
     return LaunchDescription(launch_list)
