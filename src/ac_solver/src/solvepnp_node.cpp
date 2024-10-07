@@ -148,7 +148,7 @@ void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::Sha
 
     geometry_msgs::msg::TransformStamped tf;
     tf.header.stamp = this->pose_.header.stamp;
-    tf.header.frame_id = contour->header.frame_id;
+    tf.header.frame_id = "target";
     tf.child_frame_id = "camera";
     tf.transform.translation.x = pose_.pose.position.x * 100;
     tf.transform.translation.y = pose_.pose.position.y * 100;

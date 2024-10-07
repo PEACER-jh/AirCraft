@@ -86,7 +86,7 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        Billiards:
+        target:
           Value: true
         camera:
           Value: true
@@ -96,7 +96,7 @@ Visualization Manager:
       Show Axes: true
       Show Names: false
       Tree:
-        Billiards:
+        target:
           camera:
             {}
       Update Interval: 0
@@ -212,7 +212,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: Billiards
+    Fixed Frame: target
     Frame Rate: 30
   Name: root
   Tools:

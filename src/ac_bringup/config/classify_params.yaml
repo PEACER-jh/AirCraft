@@ -3,7 +3,7 @@
     # 图像处理
     bin_low_threshold_: 150
     bin_high_threshold_: 255
-    first_canny_low_threthold: 20
+    first_canny_low_threthold: 60
     first_canny_high_threthold: 100
     second_canny_low_threthold: 20
     second_canny_high_threthold: 100
