@@ -1,17 +1,17 @@
 /**:
   ros__parameters:
     # 图像处理
-    bin_low_threshold_: 150
-    bin_high_threshold_: 255
-    first_canny_low_threthold: 60
-    first_canny_high_threthold: 100
-    second_canny_low_threthold: 20
-    second_canny_high_threthold: 100
-    dilate_iterations: 3
+    bin_low_threshold_: 150               # 二值化低阈值
+    bin_high_threshold_: 255              # 二值化高阈值
+    first_canny_low_threthold: 60         # 第一次canny边缘检测低阈值
+    first_canny_high_threthold: 100       # 第一次canny边缘检测高阈值  
+    second_canny_low_threthold: 20        # 第二次canny边缘检测低阈值
+    second_canny_high_threthold: 100      # 第二次canny边缘检测高阈值
+    dilate_iterations: 3                  # 膨胀迭代次数
 
     # 识别筛选
-    min_area: 1000
-    max_area: 10000
-    offset_u: 0
-    offset_v: 0
-    max_contour_number: 5
+    min_area: 1000                        # 筛选时最小面积
+    max_area: 10000                       # 筛选时最大面积
+    offset_u: 0                           # 筛选时图像原点x轴偏移
+    offset_v: 0                           # 筛选时图像原点y轴偏移
+    max_contour_number: 5                 # 筛选时最大轮廓数量

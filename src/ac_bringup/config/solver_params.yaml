@@ -1,4 +1,4 @@
 /**:
   ros__parameters:
-    arm_offset_x: 0.0
-    arm_offset_y: 0.0
+    arm_offset_x: 0.0   # 手眼标定时x轴偏移量
+    arm_offset_y: 0.0   # 手眼标定时y轴偏移量
