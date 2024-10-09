@@ -76,7 +76,7 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
 
 void ClassifyNode::ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg)
 {
-    if(msg->data != this->object_type_)
+    if((int)msg->data != this->object_type_)
     {   
         auto getType = [](int value){
             switch(value)
@@ -89,7 +89,7 @@ void ClassifyNode::ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg)
         RCLCPP_INFO(this->get_logger(), "****** Receive object type : %s ******", this->polygons_.header.frame_id);
     }
     
-    this->object_type_ = msg->data;
+    this->object_type_ = (int)msg->data;
 }
 
 void ClassifyNode::CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstSharedPtr info)

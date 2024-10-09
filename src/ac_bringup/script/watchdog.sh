@@ -5,7 +5,7 @@ echo "nuc" | sudo -S chmod 777 /dev/bus/usb/003/*
 echo "nuc" | sudo -s chmod 777 /dev/bus/usb/001/*
 echo "nuc" | sudo -s chmod 777 /dev/bus/usb/004/*
 echo "nuc" | sudo -s chmod 777 /dev/bus/usb/002/*
-gnome-terminal -e 'bash -c "source /opt/ros/foxy/setup.bash;source /home/nuc/Desktop/AirCraft/install/setup.bash;cd /home/nuc/Desktop/AirCraft;ros2 launch ac_bringup bring.launch.py " '
+gnome-terminal -e 'bash -c "source /opt/ros/foxy/setup.bash;source /home/nuc/Desktop/AirCraft/install/setup.bash;cd /home/nuc/Desktop/AirCraft;ros2 launch ac_bringup bringup.launch.py " '
 
 sleep 3
 
@@ -14,8 +14,8 @@ sleep 3
 
 camera_pid=$(ps -ef | grep "usb_cam_node" | grep -v grep | awk '{print $2}')
 classify_pid=$(ps -ef | grep "classify_node" | grep -v grep | awk '{print $2}')
-solver_pid=$(ps -ef | grep "processer" | grep -v grep | awk '{print $2}')
-usb_pid=$(ps -ef | grep "can_comm" | grep -v grep | awk '{print $2}')
+solver_pid=$(ps -ef | grep "solver_node" | grep -v grep | awk '{print $2}')
+usb_pid=$(ps -ef | grep "usb_node" | grep -v grep | awk '{print $2}')
 
 if [ $camera_pid -ne 0 || $classify_pid -ne 0 || $solver_pid -ne 0 || $usb_pid -ne 0]
 then         
@@ -54,7 +54,7 @@ else
         echo "nuc" | sudo -s chmod 777 /dev/bus/usb/001/*
         echo "nuc" | sudo -s chmod 777 /dev/bus/usb/004/*
         echo "nuc" | sudo -s chmod 777 /dev/bus/usb/002/*
-        gnome-terminal -e 'bash -c "source /opt/ros/foxy/setup.bash;source /home/nuc/Desktop/AirCraft/install/setup.bash;cd /home/nuc/Desktop/AirCraft;ros2 launch ac_bringup bring.launch.py " '
+        gnome-terminal -e 'bash -c "source /opt/ros/foxy/setup.bash;source /home/nuc/Desktop/AirCraft/install/setup.bash;cd /home/nuc/Desktop/AirCraft;ros2 launch ac_bringup bringup.launch.py " '
 
 fi
 

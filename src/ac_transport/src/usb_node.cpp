@@ -76,7 +76,8 @@ void UsbNode::ModeCallBack()
     {
         ReceivePackage package;
         std::memcpy(&package, receive, sizeof(ReceivePackage));
-        auto mode = package.mode & 0x01;
+        std_msgs::msg::Int8 mode;
+        std::memcpy(&mode.data, &package.mode, sizeof(uint8_t));
         RCLCPP_INFO(this->get_logger(), "[ %s ] receive mode from aircraft: %d", this->get_name(), mode);
 
         this->mode_pub_->publish(mode);
