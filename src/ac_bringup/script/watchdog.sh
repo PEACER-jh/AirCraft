@@ -5,22 +5,27 @@ echo "nuc" | sudo -S chmod 777 /dev/bus/usb/003/*
 echo "nuc" | sudo -s chmod 777 /dev/bus/usb/001/*
 echo "nuc" | sudo -s chmod 777 /dev/bus/usb/004/*
 echo "nuc" | sudo -s chmod 777 /dev/bus/usb/002/*
-gnome-terminal -e 'bash -c "source /opt/ros/foxy/setup.bash;source /home/nuc/Desktop/AirCraft/install/setup.bash;cd /home/nuc/Desktop/AirCraft;ros2 launch ac_bringup bringup.launch.py " '
+gnome-terminal -t "aircraft" -- bash -c "source /opt/ros/foxy/setup.bash;source /home/nuc/Desktop/AirCraft/install/setup.bash;cd /home/nuc/Desktop/AirCraft;ros2 launch ac_bringup bringup.launch.py"
 
 sleep 3
 
-# while true
-# do
+while true
+do
 
-camera_pid=$(ps -ef | grep "usb_cam_node" | grep -v grep | awk '{print $2}')
-classify_pid=$(ps -ef | grep "classify_node" | grep -v grep | awk '{print $2}')
-solver_pid=$(ps -ef | grep "solver_node" | grep -v grep | awk '{print $2}')
-usb_pid=$(ps -ef | grep "usb_node" | grep -v grep | awk '{print $2}')
+camera_pid=$(pgrep -f "usb_cam_node")
+classify_pid=$(pgrep -f "classify_node")
+solver_pid=$(pgrep -f "solver_node")
+usb_pid=$(pgrep -f "usb_node")
 
-if [ $camera_pid -ne 0 || $classify_pid -ne 0 || $solver_pid -ne 0 || $usb_pid -ne 0]
-then         
+# camera_pid=$(ps -f | grep "usb_cam_node" | grep -v grep | awk '{print $2}')
+# classify_pid=$(ps -f | grep "classify_node" | grep -v grep | awk '{print $2}')
+# solver_pid=$(ps -f | grep "solver_node" | grep -v grep | awk '{print $2}')
+# usb_pid=$(ps -f | grep "usb_node" | grep -v grep | awk '{print $2}')
+
+if [ $camera_pid -ne 0 ] && [ $classify_pid -ne 0 ] && [ $solver_pid -ne 0 ] && [ $usb_pid -ne 0 ];
+then                 #如果程序PID在，则程序在运行
         echo `date`
-        echo "camera_pid is exitable!"
+        echo "all_pid is exitable!"
 
 else
 	echo `date`
@@ -49,17 +54,16 @@ else
         {
         	echo "$camera_pid isnot find!"
         }
-
-        echo "nuc" | sudo -S chmod 777 /dev/bus/usb/003/*
-        echo "nuc" | sudo -s chmod 777 /dev/bus/usb/001/*
-        echo "nuc" | sudo -s chmod 777 /dev/bus/usb/004/*
+        echo "nuc" | sudo -S chmod 777 /dev/bus/usb/001/*
         echo "nuc" | sudo -s chmod 777 /dev/bus/usb/002/*
-        gnome-terminal -e 'bash -c "source /opt/ros/foxy/setup.bash;source /home/nuc/Desktop/AirCraft/install/setup.bash;cd /home/nuc/Desktop/AirCraft;ros2 launch ac_bringup bringup.launch.py " '
+        echo "nuc" | sudo -s chmod 777 /dev/bus/usb/003/*
+        echo "nuc" | sudo -s chmod 777 /dev/bus/usb/004/*
+        gnome-terminal -t "aircraft" -- bash -c "source /opt/ros/foxy/setup.bash;source /home/nuc/Desktop/AirCraft/install/setup.bash;cd /home/nuc/Desktop/AirCraft;ros2 launch ac_bringup bringup.launch.py"
 
 fi
 
 sleep 3
 
-# done
+done
 
 exit 0
