@@ -34,7 +34,6 @@ ClassifyNode::ClassifyNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
 
 }
 
-
 ClassifyNode::~ClassifyNode()
 {
     RCLCPP_INFO(this->get_logger(), "Node [ %s ] is stopped ", this->get_name());
