@@ -1,6 +1,6 @@
 #include "classify_node.hpp"
 
-namespace ac_classify
+namespace ac_classify 
 {
 ClassifyNode::ClassifyNode(const rclcpp::NodeOptions & options) : rclcpp::Node("classify_node", options)
 {

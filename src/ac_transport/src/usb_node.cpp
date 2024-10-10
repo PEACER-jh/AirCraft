@@ -55,7 +55,7 @@ void UsbNode::PoseCallBack(const geometry_msgs::msg::PoseStamped::SharedPtr pose
     float yf = -(float)pose->pose.position.z;
     std::memcpy(&this->send_package_.x[0], &xf, sizeof(float));
     std::memcpy(&this->send_package_.y[0], &yf, sizeof(float));
-
+ 
     float xs;
     float ys;
     std::memcpy(&xs, &this->send_package_.x[0], sizeof(float));
