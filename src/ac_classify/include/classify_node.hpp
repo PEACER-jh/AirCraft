@@ -60,13 +60,14 @@ public:
     void ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg);
     void findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours);                   // 寻找魔方
     void findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours);                   // 寻找台球
+    void findBilliards2(cv::Mat& mark, cv::Mat& edge);                                                  // 寻找台球v2
     std::vector<cv::Point> chooseObject(cv::Mat& mark, std::vector<std::vector<cv::Point>>& contours);  // 选择对象
     ObjectColor recogizeColor(cv::Mat& mark, std::vector<cv::Point>& contour);                          // 识别颜色(TODO)
 
 private:
     std::vector<cv::Point> contour_;
     geometry_msgs::msg::PolygonStamped polygons_;
-    int object_type_ = (int)ObjectType::RUBIKCUBE;  // 初始识别目标为魔方
+    int object_type_ = (int)ObjectType::BILLIARDS;  // 初始识别目标为魔方
 
     double min_area_;   // 识别的最小面积
     double max_area_;   // 识别的最大面积
@@ -83,6 +84,10 @@ private:
     int second_canny_high_threshold_;   // 第二级canny边缘检测高阈值
     int dilate_iterations_;             // 膨胀迭代次数
     int max_contour_number;             // 最大轮廓数量
+    // Hough
+    int hough_min_radius_;              // 霍夫圆检测最小半径
+    int hough_max_radius_;              // 霍夫圆检测最大半径
+    int hough_canny_threshold_;         // 霍夫圆检测边缘阈值
 
 };
 

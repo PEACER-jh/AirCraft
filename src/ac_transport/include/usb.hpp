@@ -3,8 +3,8 @@
 
 #include "sdk/include/usbcdc_transporter.hpp"
 
-#define SEND_ID 0x2
-#define RECEIVE_ID 0x1
+#define SEND_ID 0x22
+#define RECEIVE_ID 0x11
 
 namespace ac_transport
 {
@@ -38,7 +38,7 @@ typedef struct  // 发送包
 {
     // 包头
     uint8_t _SOF;
-    uint8_t ID;
+    // uint8_t ID;
     // 数据
     uint8_t x[4];
     uint8_t y[4];

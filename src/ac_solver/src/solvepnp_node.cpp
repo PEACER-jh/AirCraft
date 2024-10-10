@@ -46,11 +46,15 @@ void SolvePnPNode::initSolver()
     rubikcube_.push_back(cv::Point3d(0.0,  RubikCubeSize / 2.0, -RubikCubeSize / 2.0));
     rubikcube_.push_back(cv::Point3d(0.0,  RubikCubeSize / 2.0,  RubikCubeSize / 2.0));
 
-    double factor = 2.0 * std::sqrt(2.0);
-    billiards_.push_back(cv::Point3d(0.0, -BilliardsSize / factor,  BilliardsSize / factor));
-    billiards_.push_back(cv::Point3d(0.0, -BilliardsSize / factor, -BilliardsSize / factor));
-    billiards_.push_back(cv::Point3d(0.0,  BilliardsSize / factor, -BilliardsSize / factor));
-    billiards_.push_back(cv::Point3d(0.0,  BilliardsSize / factor,  BilliardsSize / factor));
+    // double factor = 2.0 * std::sqrt(2.0);
+    // billiards_.push_back(cv::Point3d(0.0, -BilliardsSize / factor,  BilliardsSize / factor));
+    // billiards_.push_back(cv::Point3d(0.0, -BilliardsSize / factor, -BilliardsSize / factor));
+    // billiards_.push_back(cv::Point3d(0.0,  BilliardsSize / factor, -BilliardsSize / factor));
+    // billiards_.push_back(cv::Point3d(0.0,  BilliardsSize / factor,  BilliardsSize / factor));
+    billiards_.push_back(cv::Point3d(0.0, -BilliardsSize / 2.0,  BilliardsSize / 2.0));
+    billiards_.push_back(cv::Point3d(0.0, -BilliardsSize / 2.0, -BilliardsSize / 2.0));
+    billiards_.push_back(cv::Point3d(0.0,  BilliardsSize / 2.0, -BilliardsSize / 2.0));
+    billiards_.push_back(cv::Point3d(0.0,  BilliardsSize / 2.0,  BilliardsSize / 2.0));
 }
 
 void SolvePnPNode::initKalman()
@@ -65,22 +69,17 @@ void SolvePnPNode::initKalman()
         0, 0, 0, 0, 1, 0,  // 速度y保持不变
         0, 0, 0, 0, 0, 1   // 速度z保持不变
     );
-
     // 设置测量矩阵 H
     this->kf_.measurementMatrix = (cv::Mat_<float>(3, 6) <<
         1, 0, 0, 0, 0, 0,
         0, 1, 0, 0, 0, 0,
         0, 0, 1, 0, 0, 0);
-
     // 初始化过程噪声协方差矩阵 Q（假设小噪声）
     cv::setIdentity(this->kf_.processNoiseCov, cv::Scalar::all(1e-4));
-
     // 初始化测量噪声协方差矩阵 R（假设中等噪声）
     cv::setIdentity(this->kf_.measurementNoiseCov, cv::Scalar::all(1e-2));
-
     // 初始化误差协方差矩阵 P
     cv::setIdentity(this->kf_.errorCovPost, cv::Scalar::all(1));
-
     // 初始化状态向量（初始位置和速度）
     this->kf_.statePost = (cv::Mat_<float>(6, 1) << 0, 0, 0, 0, 0, 0);
 
@@ -89,7 +88,7 @@ void SolvePnPNode::initKalman()
 
 void SolvePnPNode::ContourCallBack(const geometry_msgs::msg::PolygonStamped::SharedPtr contour)
 {
-    if(contour->polygon.points.size() != 4) return;
+    // if(contour->polygon.points.size() != 4) return;
 
     this->contour_.clear();
     this->contour_.resize(4);

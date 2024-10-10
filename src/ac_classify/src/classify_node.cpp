@@ -6,6 +6,9 @@ ClassifyNode::ClassifyNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
 {
     RCLCPP_INFO(this->get_logger(), "Node [ %s ] is started ", this->get_name());
 
+    cv::namedWindow("Gauss", cv::WINDOW_FREERATIO);
+    cv::namedWindow("Canny", cv::WINDOW_FREERATIO);
+
     this->min_area_ = this->declare_parameter<int>("min_area", 5000);
     this->max_area_ = this->declare_parameter<int>("max_area", 50000);
     this->offset_u_ = this->declare_parameter<int>("offset_u", 0);
@@ -19,6 +22,9 @@ ClassifyNode::ClassifyNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
     this->second_canny_low_threshold_ = this->declare_parameter<int>("second_canny_low_threthold", 50);
     this->second_canny_high_threshold_ = this->declare_parameter<int>("second_canny_high_threthold", 150);
     this->dilate_iterations_ = this->declare_parameter<int>("dilate_iterations", 5);
+    this->hough_min_radius_ = this->declare_parameter<int>("hough_min_radius", 5);
+    this->hough_max_radius_ = this->declare_parameter<int>("hough_max_radius", 100);
+    this->hough_canny_threshold_ = this->declare_parameter<int>("hough_canny_threshold", 20);
 
     this->image_mark_pub_ = image_transport::create_camera_publisher(this, "/image_mark", rmw_qos_profile_default);
     this->image_debug_pub_ = image_transport::create_camera_publisher(this, "/image_debug", rmw_qos_profile_default);
@@ -34,6 +40,7 @@ ClassifyNode::ClassifyNode(const rclcpp::NodeOptions & options) : rclcpp::Node("
 
 }
 
+
 ClassifyNode::~ClassifyNode()
 {
     RCLCPP_INFO(this->get_logger(), "Node [ %s ] is stopped ", this->get_name());
@@ -42,27 +49,43 @@ ClassifyNode::~ClassifyNode()
 void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr & img)
 {
     cv::Mat gray, blurred, bin, edges, mark;
-    std::vector<std::vector<cv::Point>> contours1, contours2;
+    std::vector<std::vector<cv::Point>> contours;
     this->image_ = cv_bridge::toCvShare(img, "bgr8")->image;
     mark = this->image_.clone();
     this->arm_center_ = cv::Point(mark.cols / 2 + offset_u_, mark.rows / 2 + offset_v_);
 
     /* 转变成为灰度图 */    cv::cvtColor(this->image_, gray, cv::COLOR_BGR2GRAY);
+    if(this->object_type_ == (int)ObjectType::RUBIKCUBE)
+    {
     /* 高斯滤波器模糊 */    cv::GaussianBlur(gray, blurred, cv::Size(5, 5), 1);
-    /* 图像二值化去影 */    cv::threshold(blurred, bin, bin_low_threshold_, bin_high_threshold_, cv::THRESH_BINARY);
-    /* 第一级边缘检测 */    cv::Canny(blurred, edges, first_canny_low_threshold_, first_canny_high_threshold_);
+    /* 为魔方边缘检测 */    cv::Canny(blurred, edges, first_canny_low_threshold_, first_canny_high_threshold_);
     /* 对图像膨胀操作 */    cv::dilate(edges, edges, cv::Mat(), cv::Point(-1, -1), dilate_iterations_);
-    /* 第一级寻找轮廓 */    cv::findContours(edges, contours1, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
-    /* 第二级边缘检测 */    cv::Canny(edges, edges, second_canny_low_threshold_, second_canny_high_threshold_);
-    /* 第二级寻找轮廓 */    cv::findContours(edges, contours2, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    /* 在图像寻找轮廓 */    cv::findContours(edges, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    }
+    if(this->object_type_ == (int)ObjectType::BILLIARDS)
+    {
+    // alpha 控制对比度（>1 增强对比度），beta 控制亮度
+        gray.convertTo(gray, -1, 2.0, -50);  // 增加对比度，减少亮度
+    /* 高斯滤波器模糊 */    cv::GaussianBlur(gray, blurred, cv::Size(1, 1), 0);
+        cv::Mat kernel = cv::getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(9, 9));
+        cv::morphologyEx(blurred, bin, cv::MORPH_CLOSE, kernel);
+    /* 为台球边缘检测 */    cv::Canny(bin, edges, first_canny_low_threshold_, first_canny_high_threshold_);
+    // /* 对图像膨胀操作 */    cv::dilate(edges, edges, cv::Mat(), cv::Point(-1, -1), dilate_iterations_);
+    /* 在图像寻找轮廓 */    cv::findContours(edges, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+    }
     
+    cv::imshow("Gauss", blurred);
+    cv::imshow("Canny", edges);
+    cv::waitKey(30);
+
     // 目标选取策略——在最大的前几个轮廓中选取质心距手眼标定处最近的轮廓
-    std::sort(contours2.begin(), contours2.end(), 
+    std::sort(contours.begin(), contours.end(), 
             [](const std::vector<cv::Point> &a, const std::vector<cv::Point> &b){return cv::contourArea(a) > cv::contourArea(b);});
     switch(this->object_type_)
     {
-        case (int)ObjectType::RUBIKCUBE: { findRubikCube(mark, contours2); break; }
-        case (int)ObjectType::BILLIARDS: { findBilliards(mark, contours2); break; }
+        case (int)ObjectType::RUBIKCUBE: { findRubikCube(mark, contours); break; }
+        case (int)ObjectType::BILLIARDS: { findBilliards2(mark, edges); break; }
+        // case (int)ObjectType::BILLIARDS: { findBilliards(mark, contours); break; }
         default: break;
     }
     
@@ -75,6 +98,7 @@ void ClassifyNode::ImageCallBack(const sensor_msgs::msg::Image::ConstSharedPtr &
 
 void ClassifyNode::ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg)
 {
+    this->object_type_ = (int)msg->data;
     if((int)msg->data != this->object_type_)
     {   
         auto getType = [](int value){
@@ -88,7 +112,7 @@ void ClassifyNode::ObjectCallBack(const std_msgs::msg::Int8::SharedPtr msg)
         RCLCPP_INFO(this->get_logger(), "****** Receive object type : %s ******", this->polygons_.header.frame_id);
     }
     
-    this->object_type_ = (int)msg->data;
+    this->object_type_ = msg->data;
 }
 
 void ClassifyNode::CameraInfoCallBack(const sensor_msgs::msg::CameraInfo::ConstSharedPtr info)
@@ -146,7 +170,7 @@ void ClassifyNode::ContourPub(cv::Mat &mark, std::vector<cv::Point> contour)
     }
     if(this->object_type_ == (int)ObjectType::BILLIARDS)    // 台球边框处理
     {
-        // 圆形最大内接矩形的四个顶点
+        // 圆形最小外接矩形的四个顶点
         cv::Rect rect = cv::boundingRect(contour);
         int length = std::min(rect.width, rect.height);
 
@@ -183,7 +207,8 @@ void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Poin
     
         std::vector<cv::Point> approx = {};
         cv::approxPolyDP(contour, approx, cv::arcLength(cv::Mat(contour), true) * 0.02, true);
-        if(approx.size() == 4)
+        // if(approx.size() == 4)
+        if(approx.size() <= 6)
         {
             double area = cv::contourArea(approx);
             if(area < min_area_ || area > max_area_) continue;
@@ -211,6 +236,8 @@ void ClassifyNode::findRubikCube(cv::Mat& mark, std::vector<std::vector<cv::Poin
         cv::approxPolyDP(choose, app, cv::arcLength(cv::Mat(choose), true) * 0.02, true);
         cv::drawContours(mark, std::vector<std::vector<cv::Point>>{app}, 0, cv::Scalar(0, 0, 255), 2);
         cv::line(mark, center, arm_center_, cv::Scalar(0, 255, 0), 2);
+    } else {
+        RCLCPP_WARN(this->get_logger(), "***************** No object found *****************");
     }
 }
 
@@ -260,7 +287,57 @@ void ClassifyNode::findBilliards(cv::Mat& mark, std::vector<std::vector<cv::Poin
         int size = static_cast<int>(std::sqrt(circle_area / CV_PI));
         cv::circle(mark, center, size, cv::Scalar(0, 0, 255), 2);
         cv::line(mark, center, arm_center_, cv::Scalar(0, 255, 0), 2);
+    } else {
+        RCLCPP_WARN(this->get_logger(), "***************** No object found *****************");
     }
+
+}
+
+void ClassifyNode::findBilliards2(cv::Mat& mark, cv::Mat& edge)
+{
+        // 霍夫圆检测
+        int min_radius = this->hough_min_radius_;
+        int max_radius = this->hough_max_radius_;
+        int canny_threshold = this->hough_canny_threshold_;
+        std::vector<cv::Vec3f> circles;
+        cv::HoughCircles(edge, circles, cv::HOUGH_GRADIENT, 1, edge.rows/8, 100, canny_threshold, min_radius, max_radius);
+        
+        std::vector<std::vector<cv::Point>> contours;
+        // 遍历每个检测到的圆
+        for (size_t i = 0; i < circles.size(); i++) 
+        {
+            cv::Vec3f circle = circles[i];
+            float x_center = circle[0];  // 圆心 x 坐标
+            float y_center = circle[1];  // 圆心 y 坐标
+            float radius = circle[2];    // 圆的半径
+            // 用于存储该圆的轮廓点
+            std::vector<cv::Point> contour; 
+            // 根据极坐标生成圆周上的点
+            for (int angle = 0; angle < 360; angle++) 
+            {
+                float theta = angle * CV_PI / 180.0;  // 将角度转换为弧度
+                int x = std::round(x_center + radius * std::cos(theta));  // 计算圆周上的 x 坐标
+                int y = std::round(y_center + radius * std::sin(theta));  // 计算圆周上的 y 坐标
+                contour.push_back(cv::Point(x, y));  // 将点添加到轮廓中
+            }
+            // 将生成的轮廓添加到 contours 列表中
+            contours.push_back(contour);
+        }
+        auto choose = chooseObject(mark, contours); 
+        if(!choose.empty())
+        {
+            this->ContourPub(mark, choose);
+
+            cv::Moments m = cv::moments(choose);
+            cv::Point center = cv::Point(m.m10 / m.m00, m.m01 / m.m00);
+            double circle_area = cv::contourArea(choose);
+            int size = static_cast<int>(std::sqrt(circle_area / CV_PI));
+            cv::circle(mark, center, size, cv::Scalar(0, 0, 255), 2);
+            cv::line(mark, center, arm_center_, cv::Scalar(0, 255, 0), 2);
+        } else {
+            RCLCPP_WARN(this->get_logger(), "***************** No object found *****************");
+        }
+    
 }
 
 // 筛选出最后的目标轮廓

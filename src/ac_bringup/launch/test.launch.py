@@ -47,7 +47,7 @@ def generate_launch_description():
         camera_node,
         classify_node,
         solvepnp_node,
-        rviz_node,
+        # rviz_node,
     ]
 
     return LaunchDescription(launch_list)

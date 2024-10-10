@@ -1,17 +1,23 @@
 /**:
   ros__parameters:
     # 图像处理
-    bin_low_threshold_: 150               # 二值化低阈值
+    bin_low_threshold_: 10                # 二值化低阈值
     bin_high_threshold_: 255              # 二值化高阈值
-    first_canny_low_threthold: 60         # 第一次canny边缘检测低阈值
+    dilate_iterations: 5                  # 膨胀迭代次数
+    # 第一次边缘检测为魔方
+    first_canny_low_threthold: 20         # 第一次canny边缘检测低阈值
     first_canny_high_threthold: 100       # 第一次canny边缘检测高阈值  
-    second_canny_low_threthold: 20        # 第二次canny边缘检测低阈值
-    second_canny_high_threthold: 100      # 第二次canny边缘检测高阈值
-    dilate_iterations: 3                  # 膨胀迭代次数
+    # 第二次边缘检测为台球
+    second_canny_low_threthold: 10        # 第二次canny边缘检测低阈值
+    second_canny_high_threthold: 60      # 第二次canny边缘检测高阈值
+    # Hough圆检
+    hough_min_radius: 5
+    hough_max_radius: 100
+    hough_canny_threshold: 20
 
     # 识别筛选
-    min_area: 1000                        # 筛选时最小面积
+    min_area: 2000                        # 筛选时最小面积
     max_area: 10000                       # 筛选时最大面积
     offset_u: 0                           # 筛选时图像原点x轴偏移
     offset_v: 0                           # 筛选时图像原点y轴偏移
-    max_contour_number: 5                 # 筛选时最大轮廓数量
+    max_contour_number: 15                # 筛选时最大轮廓数量
